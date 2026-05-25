@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Planeador</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f3;--bg3:#efefec;
+  --text:#1a1a18;--text2:#6b6b67;--text3:#9b9b97;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.2);
+  --radius:8px;--radius-lg:14px;
+  --green:#1D9E75;--green-bg:#EAF3DE;--green-text:#3B6D11;
+  --amber:#D97706;--amber-bg:#FEF3C7;--amber-text:#92400E;
+  --coral-bg:#FAECE7;--coral-text:#993C1D;
+  --blue:#378ADD;--purple:#7F77DD;--red:#E24B4A;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1c1c1a;--bg2:#262624;--bg3:#2e2e2c;
+  --text:#f0ede8;--text2:#9b9896;--text3:#6b6866;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.18);
+  --green-bg:#0a2e1e;--green-text:#5DCAA5;
+  --amber-bg:#2e1e00;--amber-text:#EF9F27;
+  --coral-bg:#2e0e00;--coral-text:#F0997B;
+}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;display:flex;justify-content:center;}
+.app{width:100%;max-width:430px;background:var(--bg);min-height:100vh;display:flex;flex-direction:column;}
+
+/* top bar */
+.top-bar{padding:0.85rem 1rem 0.65rem;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.top-bar h1{font-size:17px;font-weight:600;}
+.sync-status{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);}
+.sync-dot.ok{background:var(--green);}
+.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* bottom nav */
+.bottom-nav{display:flex;border-top:0.5px solid var(--border);background:var(--bg);padding:6px 0 max(6px,env(safe-area-inset-bottom));}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;background:none;border:none;color:var(--text3);font-size:10px;font-weight:500;}
+.nav-item.active{color:var(--text);}
+.nav-item i{font-size:22px;}
+
+.content{flex:1;overflow-y:auto;}
+.screen{display:none;padding-bottom:1rem;}
+.screen.active{display:block;}
+
+/* ── HOJE ── */
+.today-hero{padding:1rem 1rem 0.5rem;}
+.today-date{font-size:13px;color:var(--text2);}
+.today-title{font-size:22px;font-weight:700;margin-top:2px;}
+.today-shift{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+
+.energy-bar{margin:0.75rem 1rem;background:var(--bg2);border-radius:var(--radius-lg);padding:12px 14px;}
+.energy-label{font-size:12px;color:var(--text2);margin-bottom:8px;}
+.energy-opts{display:flex;gap:8px;}
+.energy-btn{flex:1;padding:8px 0;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;cursor:pointer;background:var(--bg);color:var(--text2);text-align:center;}
+.energy-btn.sel{background:var(--text);color:var(--bg);border-color:var(--text);}
+
+.sleep-card{margin:0 1rem 0.75rem;background:var(--bg2);border-radius:var(--radius-lg);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.sleep-left{display:flex;align-items:center;gap:10px;}
+.sleep-icon{font-size:20px;color:var(--text2);}
+.sleep-info{font-size:13px;font-weight:500;}
+.sleep-meta{font-size:11px;color:var(--text2);margin-top:1px;}
+.sleep-add{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;}
+
+.section-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;padding:0 1rem;margin-bottom:0.5rem;}
+
+.day-block{display:grid;grid-template-columns:62px 1fr auto;gap:8px;align-items:center;padding:8px 1rem 8px 1.25rem;border-left:2px solid transparent;margin-left:1rem;}
+.day-block.work{border-left-color:var(--blue);}
+.day-block.activity{border-left-color:var(--green);}
+.day-block.rest{border-left-color:#888780;}
+.day-block.gaming{border-left-color:var(--purple);}
+.day-block.sleep{border-left-color:#8B5CF6;}
+.db-time{font-size:12px;color:var(--text2);font-weight:500;line-height:1.3;}
+.db-title{font-size:14px;color:var(--text);font-weight:500;}
+.db-title.done{text-decoration:line-through;color:var(--text2);}
+.db-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.db-right{display:flex;align-items:center;gap:6px;}
+.db-dur{font-size:11px;color:var(--text3);white-space:nowrap;}
+.check{width:24px;height:24px;border:0.5px solid var(--border2);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;background:none;flex-shrink:0;}
+.check.done{background:var(--text);border-color:var(--text);}
+.check.done i{color:var(--bg);}
+.check i{font-size:13px;color:var(--text3);}
+.block-divider{height:0.5px;background:var(--border);margin:2px 1rem;}
+
+.next-day-card{margin:1rem 1rem 0;background:var(--bg2);border-radius:var(--radius-lg);padding:12px 14px;}
+.next-day-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;}
+.next-day-info{font-size:14px;font-weight:500;margin-top:4px;}
+.next-day-sleep{font-size:13px;color:var(--text2);margin-top:6px;display:flex;align-items:center;gap:6px;}
+
+.no-plan{padding:2rem 1rem;text-align:center;color:var(--text3);}
+.no-plan i{font-size:36px;opacity:0.35;}
+.no-plan p{font-size:13px;margin-top:10px;line-height:1.5;}
+
+/* ── SEMANA ── */
+.week-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 1rem;border-bottom:0.5px solid var(--border);}
+.nav-arrow{background:none;border:0.5px solid var(--border2);border-radius:var(--radius);width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);}
+.week-center{text-align:center;}
+.week-label{font-size:14px;font-weight:600;}
+.week-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.today-pill{display:block;margin:5px auto 0;font-size:11px;padding:3px 12px;background:none;border:0.5px solid var(--border2);border-radius:20px;cursor:pointer;color:var(--text2);}
+
+.week-tabs{display:flex;border-bottom:0.5px solid var(--border);}
+.week-tab{flex:1;padding:10px 0;font-size:12px;font-weight:500;text-align:center;color:var(--text2);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;}
+.week-tab.active{color:var(--text);border-bottom-color:var(--text);}
+
+.days-grid{padding:0.75rem 1rem 0.5rem;}
+.day-row{display:grid;grid-template-columns:72px 1fr;gap:8px;align-items:center;margin-bottom:9px;}
+.day-info{font-size:13px;color:var(--text2);}
+.day-num{font-size:15px;font-weight:600;color:var(--text);display:block;}
+.day-info.today .day-num,.day-info.today .day-name{color:var(--green);}
+.shift-sel{width:100%;padding:9px 10px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);-webkit-appearance:none;appearance:none;}
+.week-info-bar{margin:0 1rem 0.75rem;background:var(--bg2);border-radius:var(--radius);padding:10px 13px;font-size:12px;color:var(--text2);}
+.week-info-bar strong{color:var(--text);}
+
+.btn{display:block;padding:13px;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius-lg);font-size:15px;font-weight:600;cursor:pointer;width:calc(100% - 2rem);margin:0 1rem;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.regen-wrap{padding:0.75rem 1rem;border-top:0.5px solid var(--border);}
+
+.plan-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0.75rem 1rem 0;}
+.sum-card{background:var(--bg2);border-radius:var(--radius);padding:10px 12px;}
+.sum-label{font-size:11px;color:var(--text2);}
+.sum-val{font-size:20px;font-weight:600;margin-top:2px;}
+.sum-val.sm{font-size:14px;margin-top:4px;}
+.history-note{margin:0.75rem 1rem 0;background:var(--amber-bg);border-radius:var(--radius);padding:9px 12px;font-size:12px;color:var(--amber-text);}
+.history-note strong{display:block;font-weight:600;margin-bottom:2px;}
+
+.plan-day-head{display:flex;align-items:center;gap:7px;padding:11px 1rem 5px;}
+.pd-name{font-size:14px;font-weight:600;}
+.pd-date{font-size:12px;color:var(--text2);}
+.today-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.s-badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;margin-left:auto;}
+
+/* ── CONFIGURAÇÕES ── */
+.cfg-section{padding:0 1rem;margin-bottom:1.5rem;}
+.cfg-head{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.6rem;margin-top:1rem;padding:0 1rem;}
+.cfg-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:11px 13px;margin-bottom:7px;}
+.cfg-top{display:flex;align-items:center;justify-content:space-between;}
+.cfg-name{font-size:14px;font-weight:500;}
+.cfg-meta{font-size:12px;color:var(--text2);margin-top:3px;}
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:3px 5px;}
+.add-btn{width:100%;padding:10px;background:var(--bg2);border:0.5px dashed var(--border2);border-radius:var(--radius-lg);font-size:13px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.shift-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--bg);border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:1.5rem 1rem 2rem;width:100%;max-width:430px;max-height:88vh;overflow-y:auto;}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:1rem;}
+.field{margin-bottom:12px;}
+.field label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;}
+.field input,.field select,.field textarea{width:100%;padding:10px 11px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);}
+.modal-actions{display:flex;gap:8px;margin-top:14px;}
+.modal-cancel{flex:1;padding:11px;background:var(--bg2);border:none;border-radius:var(--radius);font-size:14px;cursor:pointer;color:var(--text);}
+.modal-save{flex:2;padding:11px;background:var(--text);border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;color:var(--bg);}
+.color-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:6px;}
+.color-opt{width:34px;height:34px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
+.color-opt.sel{border-color:var(--text);}
+
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading{padding:3rem 1rem;text-align:center;color:var(--text2);font-size:14px;}
+.loading p{margin-top:12px;}
+
+.star-row{display:flex;gap:8px;margin-top:6px;}
+.star-btn{font-size:24px;cursor:pointer;opacity:0.3;transition:opacity 0.1s;}
+.star-btn.active{opacity:1;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top-bar">
+    <h1>Planeador</h1>
+    <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">A ligar...</span></div>
+  </div>
+
+  <div class="content">
+    <!-- HOJE -->
+    <div class="screen active" id="screen-hoje">
+      <div id="hoje-content"></div>
+    </div>
+
+    <!-- SEMANA -->
+    <div class="screen" id="screen-semana">
+      <div class="week-nav">
+        <button class="nav-arrow" onclick="changeWeek(-1)"><i class="ti ti-chevron-left"></i></button>
+        <div class="week-center">
+          <div class="week-label" id="wlabel">—</div>
+          <div class="week-sub" id="wsub">—</div>
+          <button class="today-pill" onclick="goToday()">Esta semana</button>
+        </div>
+        <button class="nav-arrow" onclick="changeWeek(1)"><i class="ti ti-chevron-right"></i></button>
+      </div>
+      <div class="week-tabs">
+        <button class="week-tab active" id="wt-turnos" onclick="switchWeekTab('turnos')">Turnos</button>
+        <button class="week-tab" id="wt-plano" onclick="switchWeekTab('plano')">Plano</button>
+      </div>
+      <div id="week-turnos-pane">
+        <div class="days-grid" id="days-grid"></div>
+        <div class="week-info-bar" id="week-info"></div>
+        <button class="btn" id="gen-btn" onclick="generatePlan()">Gerar plano com IA ↗</button>
+        <div style="height:1rem;"></div>
+      </div>
+      <div id="week-plano-pane" style="display:none;">
+        <div id="plan-area"><div class="no-plan"><i class="ti ti-calendar-off"></i><p>Gera o plano no separador Turnos</p></div></div>
+        <div class="regen-wrap" id="regen-bar" style="display:none;"><button class="btn" style="margin:0;width:100%;" onclick="generatePlan()">Regenerar ↗</button></div>
+      </div>
+    </div>
+
+    <!-- CONFIGURAÇÕES -->
+    <div class="screen" id="screen-cfg">
+      <div style="height:0.75rem;"></div>
+      <div class="cfg-head">Tipos de turno</div>
+      <div class="cfg-section">
+        <div id="shift-types-list"></div>
+        <button class="add-btn" onclick="openModal('shifttype')"><i class="ti ti-plus"></i> Criar tipo de turno</button>
+        <p style="font-size:11px;color:var(--text3);margin-top:8px;">Exemplos: M (7h15, 5.5h), IT (12h15, 11h), Farmácia (13h, 4h)</p>
+      </div>
+      <div class="cfg-head">Tarefas fixas</div>
+      <div class="cfg-section">
+        <div id="fixed-list"></div>
+        <button class="add-btn" onclick="openModal('fixed')"><i class="ti ti-plus"></i> Adicionar</button>
+      </div>
+      <div class="cfg-head">Tarefas flexíveis</div>
+      <div class="cfg-section">
+        <div id="flex-list"></div>
+        <button class="add-btn" onclick="openModal('flex')"><i class="ti ti-plus"></i> Adicionar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-item active" id="nav-hoje" onclick="switchScreen('hoje')"><i class="ti ti-sun"></i>Hoje</button>
+    <button class="nav-item" id="nav-semana" onclick="switchScreen('semana')"><i class="ti ti-calendar-week"></i>Semana</button>
+    <button class="nav-item" id="nav-cfg" onclick="switchScreen('cfg')"><i class="ti ti-settings"></i>Config</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3 id="m-title">—</h3>
+    <div id="m-shifttype">
+      <div class="field"><label>Nome (ex: M, IT, Farmácia 4h)</label><input type="text" id="st-name"></div>
+      <div class="field"><label>Hora de início</label><input type="time" id="st-start" value="07:15"></div>
+      <div class="field"><label>Duração (horas)</label><input type="number" id="st-hours" value="5.5" min="0.5" max="24" step="0.5"></div>
+      <div class="field"><label>Cor</label><div class="color-grid" id="color-grid"></div></div>
+      <div class="field"><label>Notas (opcional)</label><input type="text" id="st-notes" placeholder="ex: seguido de farmácia"></div>
+    </div>
+    <div id="m-task" style="display:none;">
+      <div class="field"><label>Nome</label><input type="text" id="t-name"></div>
+      <div class="field"><label>Duração (minutos)</label><input type="number" id="t-dur" value="60" min="15" max="300" step="15"></div>
+      <div id="t-flex-extra">
+        <div class="field"><label>Preferência horário</label><select id="t-pref"><option value="manha">Manhã</option><option value="tarde">Tarde/Noite</option><option value="qualquer">Tanto faz</option></select></div>
+        <div class="field"><label>Vezes/semana (ideal)</label><input type="number" id="t-freq" value="2" min="1" max="7"></div>
+      </div>
+      <div id="t-fixed-extra" style="display:none;">
+        <div class="field"><label>Dia</label><select id="t-day"><option value="0">Segunda</option><option value="1">Terça</option><option value="2">Quarta</option><option value="3">Quinta</option><option value="4">Sexta</option><option value="5">Sábado</option><option value="6">Domingo</option></select></div>
+        <div class="field"><label>Hora</label><input type="time" id="t-time" value="09:00"></div>
+      </div>
+    </div>
+    <div id="m-sleep" style="display:none;">
+      <div class="field"><label>Deitei às</label><input type="time" id="sl-bed" value="23:00"></div>
+      <div class="field"><label>Acordei às</label><input type="time" id="sl-wake" value="07:00"></div>
+      <div class="field"><label>Qualidade do sono</label>
+        <div class="star-row" id="star-row">
+          <span class="star-btn" onclick="setStar(1)">⭐</span>
+          <span class="star-btn" onclick="setStar(2)">⭐</span>
+          <span class="star-btn" onclick="setStar(3)">⭐</span>
+          <span class="star-btn" onclick="setStar(4)">⭐</span>
+          <span class="star-btn" onclick="setStar(5)">⭐</span>
+        </div>
+      </div>
+      <div class="field"><label>Nota (opcional)</label><input type="text" id="sl-note" placeholder="ex: acordei 2x, muito calor..."></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="modal-save" onclick="saveModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getFirestore,doc,getDoc,setDoc}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const fbApp=initializeApp({apiKey:"AIzaSyB67hGNCNIOHX1TdMZs3SNHn5dNVBRjP_4",authDomain:"planeador-semanal.firebaseapp.com",projectId:"planeador-semanal",storageBucket:"planeador-semanal.firebasestorage.app",messagingSenderId:"460355745741",appId:"1:460355745741:web:b31c60aae0b6cae0e8f684"});
+const db=getFirestore(fbApp);
+const UID='alex';
+
+const DAYS_PT=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+const DAYS_KEY=['segunda','terca','quarta','quinta','sexta','sabado','domingo'];
+const MONTHS=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const COLORS=['#1D9E75','#378ADD','#7F77DD','#D4537E','#D85A30','#D97706','#639922','#E24B4A','#888780','#1a1a18'];
+
+function getMonday(d){const c=new Date(d);const day=c.getDay();c.setDate(c.getDate()+(day===0?-6:1-day));c.setHours(0,0,0,0);return c;}
+function wKey(m){return m.toISOString().slice(0,10);}
+function dKey(d){return d.toISOString().slice(0,10);}
+function fmt(d){return`${d.getDate()} ${MONTHS[d.getMonth()]}`;}
+function isToday(d){const t=new Date();return d.getDate()===t.getDate()&&d.getMonth()===t.getMonth()&&d.getFullYear()===t.getFullYear();}
+function timeToMin(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+function minToTime(m){return`${String(Math.floor(m/60)%24).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
+function durFmt(min){return min>=60?`${(min/60).toFixed(1).replace('.0','')}h`:`${min}min`;}
+
+// ── sync ──────────────────────────────────────────────────
+function setSyncStatus(s){
+  const dot=document.getElementById('sync-dot'),lbl=document.getElementById('sync-label');
+  if(s==='ok'){dot.className='sync-dot ok';lbl.textContent='Sincronizado';}
+  else if(s==='syncing'){dot.className='sync-dot syncing';lbl.textContent='A guardar...';}
+  else{dot.className='sync-dot';lbl.textContent='Offline';}
+}
+async function fbSet(path,data){
+  try{setSyncStatus('syncing');await setDoc(doc(db,path),data,{merge:true});setSyncStatus('ok');}
+  catch(e){setSyncStatus('offline');}
+}
+async function fbGet(path){
+  try{const s=await getDoc(doc(db,path));return s.exists()?s.data():null;}
+  catch(e){setSyncStatus('offline');return null;}
+}
+
+// ── state ─────────────────────────────────────────────────
+let curMon=getMonday(new Date());
+let weekData={};
+let sleepData={};
+let energyData={};
+let nid=30;
+let mMode=null;
+let selColor=COLORS[0];
+let selStar=0;
+
+let shiftTypes=[
+  {id:'st1',name:'M',startTime:'07:15',hours:5.5,color:'#1D9E75',notes:'Manhã'},
+  {id:'st2',name:'I',startTime:'12:15',hours:5.5,color:'#378ADD',notes:'Intermédio'},
+  {id:'st3',name:'T',startTime:'17:15',hours:5.5,color:'#D85A30',notes:'Tarde'},
+  {id:'st4',name:'IT',startTime:'12:15',hours:11,color:'#7F77DD',notes:'Intermédio+Tarde'},
+  {id:'st5',name:'MIT',startTime:'07:15',hours:15.5,color:'#E24B4A',notes:'Manhã+Inter+Tarde'},
+];
+let flexTasks=[
+  {id:10,name:'Ginásio',pref:'manha',freq:3,duration:75},
+  {id:11,name:'Leitura',pref:'qualquer',freq:4,duration:30},
+  {id:12,name:'Meditação',pref:'manha',freq:5,duration:15},
+  {id:13,name:'Diário/Journaling',pref:'manha',freq:3,duration:20},
+  {id:14,name:'Gaming',pref:'tarde',freq:3,duration:90},
+  {id:15,name:'Namorada',pref:'tarde',freq:1,duration:180},
+  {id:16,name:'Descanso',pref:'qualquer',freq:3,duration:60},
+  {id:17,name:'Stream',pref:'tarde',freq:1,duration:120},
+];
+let fixedTasks=[];
+
+// ── firebase load/save ────────────────────────────────────
+async function saveConfig(){await fbSet(`users/${UID}/config/main`,{shiftTypes,flexTasks,fixedTasks,nid});}
+async function saveWeek(key){const wd=weekData[key];if(!wd)return;await fbSet(`users/${UID}/weeks/${key}`,{shifts:wd.shifts||{},plan:wd.plan||null,checked:wd.checked||{}});}
+async function saveSleep(key,data){await fbSet(`users/${UID}/sleep/${key}`,data);}
+async function saveEnergy(key,val){await fbSet(`users/${UID}/energy/${key}`,{value:val});}
+
+async function loadAll(){
+  setSyncStatus('syncing');
+  const cfg=await fbGet(`users/${UID}/config/main`);
+  if(cfg){
+    if(cfg.shiftTypes)shiftTypes=cfg.shiftTypes;
+    if(cfg.flexTasks)flexTasks=cfg.flexTasks;
+    if(cfg.fixedTasks)fixedTasks=cfg.fixedTasks;
+    if(cfg.nid)nid=cfg.nid;
+  }
+  await ensureWeekLoaded(curMon);
+  // load sleep for last 7 days
+  const today=new Date();
+  for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);const k=dKey(d);const sl=await fbGet(`users/${UID}/sleep/${k}`);if(sl)sleepData[k]=sl;}
+  // load energy today
+  const ek=dKey(today);const en=await fbGet(`users/${UID}/energy/${ek}`);if(en)energyData[ek]=en.value;
+  setSyncStatus('ok');
+  renderAll();
+}
+
+async function ensureWeekLoaded(m){
+  const k=wKey(m);
+  if(weekData[k]&&weekData[k]._loaded)return;
+  const data=await fbGet(`users/${UID}/weeks/${k}`);
+  weekData[k]=data?Object.assign({_loaded:true},data):{_loaded:true,shifts:{},plan:null,checked:{}};
+}
+
+// ── getters ───────────────────────────────────────────────
+function getWD(m){const k=wKey(m);if(!weekData[k])weekData[k]={_loaded:false,shifts:{},plan:null,checked:{}};return weekData[k];}
+function getShift(sid){if(!sid||sid==='folga')return null;return shiftTypes.find(s=>s.id===sid)||null;}
+function getShiftColor(sid){const st=getShift(sid);return st?st.color:'var(--border)';}
+function getShiftLabel(sid){const st=getShift(sid);return st?st.name:'Folga';}
+function getShiftHours(sid){const st=getShift(sid);return st?st.hours:0;}
+function weekDays(m){return Array.from({length:7},(_,i)=>{const d=new Date(m);d.setDate(d.getDate()+i);return d;});}
+
+// ── sleep helpers ─────────────────────────────────────────
+function calcSleepHours(bed,wake){
+  let b=timeToMin(bed),w=timeToMin(wake);
+  if(w<=b)w+=24*60;
+  return Math.round((w-b)/60*10)/10;
+}
+function suggestSleep(tomorrowSid){
+  const st=getShift(tomorrowSid);
+  if(!st)return{bed:'23:00',wake:'07:30',note:'Dia de folga'};
+  const startMin=timeToMin(st.startTime);
+  const wakeMin=startMin-60; // acordar 1h antes
+  const wakeAdj=wakeMin<360?360:wakeMin; // nunca antes das 6h
+  const bedMin=wakeAdj-480; // 8h de sono
+  const bedAdj=bedMin<0?bedMin+24*60:bedMin;
+  return{bed:minToTime(bedAdj),wake:minToTime(wakeAdj),note:`Turno ${st.name} às ${st.startTime}`};
+}
+
+// ── history context ───────────────────────────────────────
+function buildHistory(){
+  const keys=Object.keys(weekData).sort();
+  const cur=wKey(curMon);
+  const past=keys.filter(k=>k<cur&&weekData[k]._loaded).slice(-3);
+  const sleepLines=Object.entries(sleepData).slice(-5).map(([k,v])=>`${k}: dormiu ${calcSleepHours(v.bed,v.wake)}h (qualidade ${v.stars}/5)`).join('\n')||'Sem dados de sono.';
+  if(!past.length)return`Histórico semanas: Sem dados.\nSono recente:\n${sleepLines}`;
+  const weekLines=past.map(k=>{
+    const wd=weekData[k];let h=0;DAYS_KEY.forEach(d=>h+=getShiftHours(wd.shifts?.[d]));
+    const total=Object.keys(wd.checked||{}).length;
+    const done=Object.values(wd.checked||{}).filter(Boolean).length;
+    return`Semana ${k}: ${Math.round(h)}h trabalho, ${done}/${total} atividades concluídas`;
+  }).join('\n');
+  return`Histórico semanas:\n${weekLines}\n\nSono recente:\n${sleepLines}`;
+}
+
+// ── screen navigation ─────────────────────────────────────
+window.switchScreen=function(s){
+  ['hoje','semana','cfg'].forEach(x=>{
+    document.getElementById(`screen-${x}`).classList.toggle('active',x===s);
+    document.getElementById(`nav-${x}`).classList.toggle('active',x===s);
+  });
+  if(s==='hoje')renderHoje();
+  if(s==='semana'){updateWeekHeader();renderDays();}
+  if(s==='cfg'){renderShiftTypes();renderTasks();}
+};
+
+// ── HOJE ──────────────────────────────────────────────────
+function renderHoje(){
+  const now=new Date();
+  const todayKey=dKey(now);
+  const mon=getMonday(now);
+  const wd=getWD(mon);
+  const dayIdx=now.getDay()===0?6:now.getDay()-1;
+  const dayKey=DAYS_KEY[dayIdx];
+  const sid=wd.shifts?.[dayKey]||'folga';
+  const shift=getShift(sid);
+  const plan=wd.plan;
+  const todayPlan=plan?.days?.find(d=>d.day===dayKey);
+  const checked=wd.checked||{};
+  const energy=energyData[todayKey]||null;
+
+  // tomorrow shift
+  const tomorrow=new Date(now);tomorrow.setDate(tomorrow.getDate()+1);
+  const tmIdx=tomorrow.getDay()===0?6:tomorrow.getDay()-1;
+  const tmKey=DAYS_KEY[tmIdx];
+  const tmMon=getMonday(tomorrow);
+  const tmWD=getWD(tmMon);
+  const tmSid=tmWD.shifts?.[tmKey]||'folga';
+  const sleepSug=suggestSleep(tmSid);
+  const sleepToday=sleepData[todayKey]||null;
+
+  const dayNames=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const shiftBadge=shift?`<span class="today-shift" style="background:${shift.color}22;color:${shift.color};">${shift.name} · ${shift.startTime} · ${shift.hours}h</span>`:`<span class="today-shift" style="background:var(--bg2);color:var(--text2);">Folga</span>`;
+
+  let html=`<div class="today-hero">
+    <div class="today-date">${dayNames[now.getDay()]}, ${fmt(now)}</div>
+    <div class="today-title">Bom dia, Alex</div>
+    ${shiftBadge}
+  </div>`;
+
+  // energia
+  html+=`<div class="energy-bar">
+    <div class="energy-label">Como está a energia hoje?</div>
+    <div class="energy-opts">
+      <button class="energy-btn${energy==='baixa'?' sel':''}" onclick="setEnergy('baixa','${todayKey}')">😴 Baixa</button>
+      <button class="energy-btn${energy==='normal'?' sel':''}" onclick="setEnergy('normal','${todayKey}')">👍 Normal</button>
+      <button class="energy-btn${energy==='boa'?' sel':''}" onclick="setEnergy('boa','${todayKey}')">⚡ Boa</button>
+    </div>
+  </div>`;
+
+  // sono de ontem
+  html+=`<div class="sleep-card" onclick="openModal('sleep','${todayKey}')">
+    <div class="sleep-left">
+      <i class="ti ti-moon sleep-icon"></i>
+      <div>${sleepToday?`<div class="sleep-info">${calcSleepHours(sleepToday.bed,sleepToday.wake)}h de sono · ${'⭐'.repeat(sleepToday.stars)}</div><div class="sleep-meta">${sleepToday.bed} → ${sleepToday.wake}</div>`:'<div class="sleep-info">Registar sono de hoje</div><div class="sleep-meta">Toca para adicionar</div>'}</div>
+    </div>
+    <div class="sleep-add"><i class="ti ti-chevron-right"></i></div>
+  </div>`;
+
+  // plano do dia
+  if(todayPlan&&todayPlan.blocks?.length){
+    html+=`<div class="section-label">Plano de hoje</div>`;
+    todayPlan.blocks.forEach((b,bi)=>{
+      const k=`${wKey(mon)}-${dayKey}-${b.time}-${b.title}`;
+      const done=checked[k]||false;
+      const safeId='bt_'+k.replace(/[^a-z0-9]/gi,'_');
+      if(bi>0)html+=`<div class="block-divider"></div>`;
+      html+=`<div class="day-block ${b.type}">
+        <span class="db-time">${b.time}</span>
+        <div><div class="db-title${done?' done':''}" id="${safeId}">${b.title}</div><div class="db-sub">${durFmt(b.duration)}</div></div>
+        <div class="db-right"><button class="check${done?' done':''}" onclick="toggleCheckHoje('${k}','${safeId}',this,'${wKey(mon)}')"><i class="ti ti-check"></i></button></div>
+      </div>`;
+    });
+  }else{
+    html+=`<div class="no-plan"><i class="ti ti-calendar-off"></i><p>Sem plano para hoje.<br>Vai a <strong>Semana</strong> e gera o plano.</p></div>`;
+  }
+
+  // amanhã / dormir
+  html+=`<div class="next-day-card">
+    <div class="next-day-label">Amanhã · ${DAYS_PT[tmIdx]}</div>
+    <div class="next-day-info">${getShift(tmSid)?`Turno ${getShiftLabel(tmSid)} às ${getShift(tmSid)?.startTime}`:'Folga'}</div>
+    <div class="next-day-sleep"><i class="ti ti-moon" style="font-size:14px;color:var(--purple);"></i> Deitar às <strong>${sleepSug.bed}</strong> · Acordar às <strong>${sleepSug.wake}</strong></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:4px;">${sleepSug.note}</div>
+  </div>`;
+
+  document.getElementById('hoje-content').innerHTML=html;
+}
+
+window.setEnergy=async function(val,key){
+  energyData[key]=val;
+  await saveEnergy(key,val);
+  renderHoje();
+};
+window.toggleCheckHoje=async function(key,safeId,btn,weekKey){
+  const wd=weekData[weekKey];if(!wd)return;
+  wd.checked[key]=!wd.checked[key];
+  btn.classList.toggle('done');
+  const el=document.getElementById(safeId);if(el)el.classList.toggle('done');
+  await saveWeek(weekKey);
+};
+
+// ── SEMANA ────────────────────────────────────────────────
+function updateWeekHeader(){
+  const days=weekDays(curMon);
+  document.getElementById('wlabel').textContent=`${fmt(curMon)} – ${fmt(days[6])}`;
+  const now=getMonday(new Date());
+  const diff=Math.round((curMon-now)/(7*86400000));
+  document.getElementById('wsub').textContent=diff===0?'Semana atual':diff===1?'Próxima semana':diff===-1?'Semana passada':diff>0?`+${diff} sem`:`${diff} sem`;
+}
+window.changeWeek=async function(d){
+  curMon=new Date(curMon);curMon.setDate(curMon.getDate()+d*7);
+  await ensureWeekLoaded(curMon);
+  updateWeekHeader();renderDays();
+  const wd=getWD(curMon);
+  if(document.getElementById('week-plano-pane').style.display!=='none'){
+    if(wd.plan)renderPlan(wd.plan,wd.checked);else showEmptyPlan();
+  }
+};
+window.goToday=async function(){curMon=getMonday(new Date());await ensureWeekLoaded(curMon);updateWeekHeader();renderDays();};
+
+window.switchWeekTab=function(tab){
+  document.getElementById('wt-turnos').classList.toggle('active',tab==='turnos');
+  document.getElementById('wt-plano').classList.toggle('active',tab==='plano');
+  document.getElementById('week-turnos-pane').style.display=tab==='turnos'?'block':'none';
+  document.getElementById('week-plano-pane').style.display=tab==='plano'?'block':'none';
+  if(tab==='plano'){const wd=getWD(curMon);if(wd.plan)renderPlan(wd.plan,wd.checked);else showEmptyPlan();document.getElementById('regen-bar').style.display=wd.plan?'block':'none';}
+};
+
+function renderDays(){
+  const wd=getWD(curMon);
+  const days=weekDays(curMon);
+  const opts='<option value="folga">Folga</option>'+shiftTypes.map(s=>`<option value="${s.id}">${s.name}${s.notes?' — '+s.notes:''}</option>`).join('');
+  document.getElementById('days-grid').innerHTML=DAYS_KEY.map((k,i)=>{
+    const d=days[i];const tod=isToday(d);const val=wd.shifts?.[k]||'folga';
+    const color=getShiftColor(val);
+    return`<div class="day-row">
+      <div class="day-info${tod?' today':''}"><span class="day-num">${DAYS_PT[i].slice(0,3)} ${d.getDate()}</span><span class="day-name" style="font-size:11px;">${MONTHS[d.getMonth()]}</span></div>
+      <select class="shift-sel" style="border-left:3px solid ${color};" onchange="setShift('${k}',this.value)">${opts.replace(`value="${val}"`,`value="${val}" selected`)}</select>
+    </div>`;
+  }).join('');
+  updateInfo();
+}
+window.setShift=async function(k,v){
+  const wd=getWD(curMon);if(!wd.shifts)wd.shifts={};
+  wd.shifts[k]=v;renderDays();await saveWeek(wKey(curMon));
+};
+function updateInfo(){
+  const wd=getWD(curMon);let h=0;
+  DAYS_KEY.forEach(k=>h+=getShiftHours(wd.shifts?.[k]));
+  h=Math.round(h*10)/10;
+  const t=h<=11?'🟢 Leve':h<=22?'🟡 Normal':h<=30?'🟠 Pesada':'🔴 Muito pesada';
+  document.getElementById('week-info').innerHTML=`<strong>${h}h de trabalho</strong> &nbsp;·&nbsp; ${t}`;
+}
+
+// ── GENERATE ──────────────────────────────────────────────
+window.generatePlan=async function(){
+  const btn=document.getElementById('gen-btn');
+  btn.disabled=true;btn.textContent='A gerar...';
+  switchWeekTab('plano');
+  document.getElementById('regen-bar').style.display='none';
+  document.getElementById('plan-area').innerHTML='<div class="loading"><div class="spinner"></div><p>A IA está a analisar a tua semana...</p></div>';
+
+  const wd=getWD(curMon);
+  const days=weekDays(curMon);
+  let totalH=0;DAYS_KEY.forEach(k=>totalH+=getShiftHours(wd.shifts?.[k]));
+  const wt=totalH<=11?'leve':totalH<=22?'normal':totalH<=30?'pesada':'muito pesada';
+  const energy=energyData[dKey(new Date())]||'normal';
+  const hist=buildHistory();
+
+  const sDesc=DAYS_KEY.map((k,i)=>{
+    const sid=wd.shifts?.[k]||'folga';const st=getShift(sid);
+    const tmIdx=(i+1)%7;const tmSid=wd.shifts?.[DAYS_KEY[tmIdx]]||'folga';
+    const sleep=suggestSleep(tmSid);
+    return`${DAYS_PT[i]} ${days[i].getDate()}/${days[i].getMonth()+1}: ${st?`${st.name} (${st.startTime}, ${st.hours}h)`:'Folga'} | Dormir: ${sleep.bed} | Acordar: ${sleep.wake}`;
+  }).join('\n');
+
+  const fDesc=fixedTasks.length?fixedTasks.map(t=>`- ${t.name}: ${DAYS_PT[t.dayIdx]} às ${t.time}, ${t.duration}min`).join('\n'):'Nenhuma';
+  const flDesc=flexTasks.map(t=>`- ${t.name}: ${t.freq}×/semana, ${t.duration}min, preferência ${t.pref==='manha'?'manhã':t.pref==='tarde'?'tarde/noite':'qualquer'}`).join('\n');
+
+  const prompt=`És um assistente de planeamento pessoal rigoroso. Gera um plano semanal COMPLETO com horas exatas para TODAS as atividades do dia, incluindo acordar, refeições, higiene, trabalho, atividades e dormir. O utilizador é enfermeiro com turnos irregulares.
+
+SEMANA (formato: dia: turno | hora dormir | hora acordar):
+${sDesc}
+
+CARGA: ${Math.round(totalH)}h — semana ${wt}
+ENERGIA HOJE: ${energy}
+
+${hist}
+
+TAREFAS FIXAS:
+${fDesc}
+
+TAREFAS FLEXÍVEIS (distribuir ao longo da semana):
+${flDesc}
+
+REGRAS CRÍTICAS:
+- Inclui SEMPRE no plano de cada dia: Acordar, Higiene matinal (15min), Pequeno-almoço (20min), e Dormir com a hora sugerida acima.
+- Respeita rigorosamente as horas de início e duração de cada turno.
+- Após turno, mínimo 1h antes de atividade física intensa.
+- Distribui refeições: almoço ~13h, jantar ~20h (ajusta ao turno).
+- Semana pesada: menos atividades opcionais, mais descanso.
+- Se energia baixa hoje: reduz intensidade do primeiro dia.
+- Gaming e stream são legítimos.
+- Cada dia deve ter uma sequência de blocos do acordar ao dormir, sem gaps grandes.
+
+Responde APENAS com JSON válido sem markdown:
+{"weekSummary":{"workHours":number,"activitiesPlanned":number,"restBlocks":number,"weekType":"string","historyNote":"string ou vazio"},"days":[{"day":"segunda","blocks":[{"time":"HH:MM","title":"string","duration":number,"type":"work|activity|rest|gaming|sleep"}]}]}`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const text=data.content.map(i=>i.text||'').join('');
+    const plan=JSON.parse(text.replace(/```json|```/g,'').trim());
+    wd.plan=plan;
+    await saveWeek(wKey(curMon));
+    renderPlan(plan,wd.checked);
+    document.getElementById('regen-bar').style.display='block';
+    if(document.getElementById('screen-hoje').classList.contains('active'))renderHoje();
+  }catch(e){
+    document.getElementById('plan-area').innerHTML=`<div class="no-plan"><i class="ti ti-alert-triangle"></i><p>Erro ao gerar. Tenta novamente.</p></div>`;
+  }
+  btn.disabled=false;btn.textContent='Gerar plano com IA ↗';
+};
+
+function showEmptyPlan(){document.getElementById('plan-area').innerHTML='<div class="no-plan"><i class="ti ti-calendar-off"></i><p>Gera o plano no separador Turnos</p></div>';}
+
+function renderPlan(plan,checked){
+  const wd=getWD(curMon);const days=weekDays(curMon);const s=plan.weekSummary;
+  let html=`<div class="plan-summary">
+    <div class="sum-card"><div class="sum-label">Horas trabalho</div><div class="sum-val">${Math.round(s.workHours*10)/10}h</div></div>
+    <div class="sum-card"><div class="sum-label">Semana</div><div class="sum-val sm">${s.weekType}</div></div>
+    <div class="sum-card"><div class="sum-label">Atividades</div><div class="sum-val">${s.activitiesPlanned}</div></div>
+    <div class="sum-card"><div class="sum-label">Descanso</div><div class="sum-val">${s.restBlocks}</div></div>
+  </div>`;
+  if(s.historyNote)html+=`<div class="history-note"><strong>Ajuste histórico</strong>${s.historyNote}</div>`;
+  html+='<div style="height:0.75rem;"></div>';
+
+  plan.days.forEach((day,di)=>{
+    const idx=DAYS_KEY.indexOf(day.day);const dateObj=days[idx>=0?idx:di];
+    const sid=wd.shifts?.[day.day]||'folga';const color=getShiftColor(sid);const label=getShiftLabel(sid);
+    const tod=isToday(dateObj);
+    const blocks=day.blocks.map((b,bi)=>{
+      const k=`${wKey(curMon)}-${day.day}-${b.time}-${b.title}`;
+      const done=checked[k]||false;
+      const safeId='bt_'+k.replace(/[^a-z0-9]/gi,'_');
+      return`${bi>0?'<div class="block-divider"></div>':''}<div class="day-block ${b.type}">
+        <span class="db-time">${b.time}</span>
+        <div><div class="db-title${done?' done':''}" id="${safeId}">${b.title}</div><div class="db-sub">${durFmt(b.duration)}</div></div>
+        <div class="db-right"><button class="check${done?' done':''}" onclick="toggleCheckWeek('${k}','${safeId}',this)"><i class="ti ti-check"></i></button></div>
+      </div>`;
+    }).join('');
+    html+=`<div class="plan-day-head">${tod?'<div class="today-dot"></div>':''}<span class="pd-name">${DAYS_PT[idx>=0?idx:di]}</span><span class="pd-date">${fmt(dateObj)}</span><span class="s-badge" style="background:${color}22;color:${color};margin-left:auto;">${label}</span></div>${blocks}<div style="height:0.5rem;border-bottom:0.5px solid var(--border);margin-bottom:0.5rem;"></div>`;
+  });
+  document.getElementById('plan-area').innerHTML=html;
+}
+
+window.toggleCheckWeek=async function(key,safeId,btn){
+  const wd=getWD(curMon);
+  wd.checked[key]=!wd.checked[key];
+  btn.classList.toggle('done');
+  const el=document.getElementById(safeId);if(el)el.classList.toggle('done');
+  await saveWeek(wKey(curMon));
+};
+
+// ── CFG ───────────────────────────────────────────────────
+function renderShiftTypes(){
+  document.getElementById('shift-types-list').innerHTML=shiftTypes.map(s=>`<div class="cfg-card"><div class="cfg-top"><div style="display:flex;align-items:center;gap:8px;"><div class="shift-dot" style="background:${s.color};"></div><span class="cfg-name">${s.name}</span></div><button class="icon-btn" onclick="delShift('${s.id}')"><i class="ti ti-x"></i></button></div><div class="cfg-meta">${s.startTime} · ${s.hours}h${s.notes?' · '+s.notes:''}</div></div>`).join('');
+}
+function renderTasks(){
+  document.getElementById('fixed-list').innerHTML=fixedTasks.length?fixedTasks.map(t=>`<div class="cfg-card"><div class="cfg-top"><span class="cfg-name">${t.name}</span><button class="icon-btn" onclick="delTask(${t.id},'fixed')"><i class="ti ti-x"></i></button></div><div class="cfg-meta">${DAYS_PT[t.dayIdx]} · ${t.time} · ${t.duration}min</div></div>`).join(''):'<p style="font-size:13px;color:var(--text3);padding:4px 0 10px;">Nenhuma</p>';
+  document.getElementById('flex-list').innerHTML=flexTasks.map(t=>`<div class="cfg-card"><div class="cfg-top"><span class="cfg-name">${t.name}</span><button class="icon-btn" onclick="delTask(${t.id},'flex')"><i class="ti ti-x"></i></button></div><div class="cfg-meta">${t.freq}×/sem · ${t.duration}min · ${t.pref==='manha'?'Manhã':t.pref==='tarde'?'Tarde':'Qualquer'}</div></div>`).join('');
+}
+window.delShift=async function(id){shiftTypes=shiftTypes.filter(s=>s.id!==id);renderShiftTypes();renderDays();await saveConfig();};
+window.delTask=async function(id,type){
+  if(type==='fixed')fixedTasks=fixedTasks.filter(t=>t.id!==id);
+  else flexTasks=flexTasks.filter(t=>t.id!==id);
+  renderTasks();await saveConfig();
+};
+
+// ── MODAL ─────────────────────────────────────────────────
+function buildColorGrid(){
+  document.getElementById('color-grid').innerHTML=COLORS.map(c=>`<div class="color-opt${c===selColor?' sel':''}" style="background:${c};" onclick="selCol('${c}')"></div>`).join('');
+}
+window.selCol=function(c){selColor=c;buildColorGrid();};
+window.setStar=function(n){
+  selStar=n;
+  document.querySelectorAll('.star-btn').forEach((s,i)=>s.classList.toggle('active',i<n));
+};
+
+window.openModal=function(type,extra){
+  mMode=type;
+  document.getElementById('m-shifttype').style.display=type==='shifttype'?'block':'none';
+  document.getElementById('m-task').style.display=(type==='fixed'||type==='flex')?'block':'none';
+  document.getElementById('m-sleep').style.display=type==='sleep'?'block':'none';
+  if(type==='shifttype'){document.getElementById('m-title').textContent='Novo tipo de turno';selColor=COLORS[0];buildColorGrid();document.getElementById('st-name').value='';}
+  if(type==='fixed'){document.getElementById('m-title').textContent='Tarefa fixa';document.getElementById('t-flex-extra').style.display='none';document.getElementById('t-fixed-extra').style.display='block';document.getElementById('t-name').value='';}
+  if(type==='flex'){document.getElementById('m-title').textContent='Tarefa flexível';document.getElementById('t-flex-extra').style.display='block';document.getElementById('t-fixed-extra').style.display='none';document.getElementById('t-name').value='';}
+  if(type==='sleep'){document.getElementById('m-title').textContent='Sono';mMode='sleep_'+extra;selStar=0;document.querySelectorAll('.star-btn').forEach(s=>s.classList.remove('active'));}
+  document.getElementById('modal-bg').classList.add('open');
+};
+window.closeModal=function(e){if(!e||e.target===document.getElementById('modal-bg'))document.getElementById('modal-bg').classList.remove('open');};
+window.saveModal=async function(){
+  if(mMode==='shifttype'){
+    const name=document.getElementById('st-name').value.trim();if(!name)return;
+    shiftTypes.push({id:'st'+Date.now(),name,startTime:document.getElementById('st-start').value,hours:parseFloat(document.getElementById('st-hours').value)||5.5,color:selColor,notes:document.getElementById('st-notes').value.trim()});
+    renderShiftTypes();renderDays();await saveConfig();
+  }else if(mMode==='fixed'||mMode==='flex'){
+    const name=document.getElementById('t-name').value.trim();if(!name)return;
+    const dur=parseInt(document.getElementById('t-dur').value)||60;const id=nid++;
+    if(mMode==='fixed'){fixedTasks.push({id,name,dayIdx:parseInt(document.getElementById('t-day').value),time:document.getElementById('t-time').value,duration:dur});}
+    else{flexTasks.push({id,name,pref:document.getElementById('t-pref').value,freq:parseInt(document.getElementById('t-freq').value)||1,duration:dur});}
+    renderTasks();await saveConfig();
+  }else if(mMode&&mMode.startsWith('sleep_')){
+    const key=mMode.replace('sleep_','');
+    const entry={bed:document.getElementById('sl-bed').value,wake:document.getElementById('sl-wake').value,stars:selStar||3,note:document.getElementById('sl-note').value.trim(),ts:Date.now()};
+    sleepData[key]=entry;await saveSleep(key,entry);renderHoje();
+  }
+  document.getElementById('modal-bg').classList.remove('open');
+};
+
+// ── INIT ──────────────────────────────────────────────────
+function renderAll(){updateWeekHeader();renderDays();renderHoje();}
+loadAll();
+</script>
+</body>
+</html>
