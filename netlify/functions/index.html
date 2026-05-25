@@ -637,7 +637,7 @@ Responde APENAS com JSON válido sem markdown:
 {"weekSummary":{"workHours":number,"activitiesPlanned":number,"restBlocks":number,"weekType":"string","historyNote":"string ou vazio"},"days":[{"day":"segunda","blocks":[{"time":"HH:MM","title":"string","duration":number,"type":"work|activity|rest|gaming|sleep"}]}]}`;
 
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('/.netlify/functions/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     const text=data.content.map(i=>i.text||'').join('');
     const plan=JSON.parse(text.replace(/```json|```/g,'').trim());
