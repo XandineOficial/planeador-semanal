@@ -250,7 +250,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div id="shift-types-list"></div>
         <button class="add-btn" onclick="openModal('shifttype')"><i class="ti ti-plus"></i> Criar tipo de turno</button>
       </div>
-      <div class="cfg-head">Tarefas fixas</div>
+      <div class="cfg-head">Carga semanal</div>
+      <div class="cfg-section">
+        <div class="cfg-card" style="flex-direction:column;align-items:flex-start;gap:10px;">
+          <div style="font-size:12px;color:var(--text3);line-height:1.6;">Define as horas a partir das quais a semana muda de categoria.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;">
+            <div class="field" style="margin:0;"><label>🟢 Leve até (h)</label><input type="number" id="th-leve" min="1" max="60" step="1"></div>
+            <div class="field" style="margin:0;"><label>🟡 Normal até (h)</label><input type="number" id="th-normal" min="1" max="60" step="1"></div>
+            <div class="field" style="margin:0;"><label>🟠 Pesada até (h)</label><input type="number" id="th-pesada" min="1" max="60" step="1"></div>
+            <div class="field" style="margin:0;"><label>🔴 Acima → Muito pesada</label><input type="number" disabled style="opacity:0.4;" id="th-muito"></div>
+          </div>
+          <button onclick="saveThresholds()" style="background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;">Guardar</button>
+        </div>
+      </div>
       <div class="cfg-section">
         <div id="fixed-list"></div>
         <button class="add-btn" onclick="openModal('fixed')"><i class="ti ti-plus"></i> Adicionar</button>
@@ -360,6 +372,7 @@ let curMon=getMonday(new Date());
 let weekData={};let sleepData={};let energyData={};let noteData={};
 let nid=30;let mMode=null;let selColor=COLORS[0];let selStar=0;let editingId=null;let editingType=null;
 
+let thresholds={leve:16,normal:27,pesada:38};
 let shiftTypes=[
   {id:'st1',name:'M',startTime:'07:15',hours:5.5,homeTime:'14:00',color:'#1D9E75',notes:'Manhã'},
   {id:'st2',name:'I',startTime:'12:15',hours:5.5,homeTime:'19:00',color:'#378ADD',notes:'Intermédio'},
@@ -379,7 +392,7 @@ let flexTasks=[
 ];
 let fixedTasks=[];
 
-async function saveConfig(){await fbSet(`users/${UID}/config/main`,{shiftTypes,flexTasks,fixedTasks,nid});}
+async function saveConfig(){await fbSet(`users/${UID}/config/main`,{shiftTypes,flexTasks,fixedTasks,nid,thresholds});}
 async function saveWeek(key){const wd=weekData[key];if(!wd)return;await fbSet(`users/${UID}/weeks/${key}`,{shifts:wd.shifts||{},plan:wd.plan||null,checked:wd.checked||{}});}
 async function saveSleep(key,data){await fbSet(`users/${UID}/sleep/${key}`,data);}
 async function saveEnergy(key,val){await fbSet(`users/${UID}/energy/${key}`,{value:val});}
@@ -388,7 +401,7 @@ async function saveNote(key,val){await fbSet(`users/${UID}/notes/${key}`,{text:v
 async function loadAll(){
   setSyncStatus('syncing');
   const cfg=await fbGet(`users/${UID}/config/main`);
-  if(cfg){if(cfg.shiftTypes)shiftTypes=cfg.shiftTypes;if(cfg.flexTasks)flexTasks=cfg.flexTasks;if(cfg.fixedTasks)fixedTasks=cfg.fixedTasks;if(cfg.nid)nid=cfg.nid;}
+  if(cfg){if(cfg.shiftTypes)shiftTypes=cfg.shiftTypes;if(cfg.flexTasks)flexTasks=cfg.flexTasks;if(cfg.fixedTasks)fixedTasks=cfg.fixedTasks;if(cfg.nid)nid=cfg.nid;if(cfg.thresholds)thresholds=cfg.thresholds;}
   await ensureWeekLoaded(curMon);
   const today=new Date();
   for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);const k=dKey(d);const sl=await fbGet(`users/${UID}/sleep/${k}`);if(sl)sleepData[k]=sl;}
@@ -445,10 +458,29 @@ window.copyHistory=function(){
   }).finally(()=>alert('✅ Histórico copiado!'));
 };
 
+function getWeekType(h){return h<=thresholds.leve?'🟢 Leve':h<=thresholds.normal?'🟡 Normal':h<=thresholds.pesada?'🟠 Pesada':'🔴 Muito pesada';}
+function getWeekTypeText(h){return h<=thresholds.leve?'leve':h<=thresholds.normal?'normal':h<=thresholds.pesada?'pesada':'muito pesada';}
+window.saveThresholds=async function(){
+  const l=parseInt(document.getElementById('th-leve').value);
+  const n=parseInt(document.getElementById('th-normal').value);
+  const p=parseInt(document.getElementById('th-pesada').value);
+  if(!l||!n||!p||l>=n||n>=p){alert('Valores inválidos. Leve < Normal < Pesada.');return;}
+  thresholds={leve:l,normal:n,pesada:p};
+  document.getElementById('th-muito').value=p+1+'+'
+  await saveConfig();
+  alert('✅ Critérios guardados!');
+  updateInfo();
+};
+function renderThresholds(){
+  document.getElementById('th-leve').value=thresholds.leve;
+  document.getElementById('th-normal').value=thresholds.normal;
+  document.getElementById('th-pesada').value=thresholds.pesada;
+  document.getElementById('th-muito').value=(thresholds.pesada+1)+'+';
+}
 window.copyPrompt=function(){
   const wd=getWD(curMon);const days=weekDays(curMon);
   let totalH=0;DAYS_KEY.forEach(k=>totalH+=getShiftHours(wd.shifts?.[k]));
-  const wt=totalH<=11?'leve':totalH<=22?'normal':totalH<=30?'pesada':'muito pesada';
+  const wt=getWeekTypeText(totalH);
   const sDesc=DAYS_KEY.map((k,i)=>{
     const sid=wd.shifts?.[k]||'folga';const st=getShift(sid);
     return`${DAYS_PT[i]} ${days[i].getDate()}/${days[i].getMonth()+1}: ${st?`${st.name} (${st.startTime}, ${st.hours}h, chega ~${st.homeTime})`:'Folga'}`;
@@ -468,7 +500,7 @@ window.copyPrompt=function(){
 
   const prompt=`DADOS DA SEMANA:
 
-TURNOS (dia: turno | hora dormir | hora acordar):
+TURNOS DA SEMANA:
 ${sDesc}
 
 CARGA: ${Math.round(totalH*10)/10}h — semana ${wt}
@@ -500,7 +532,7 @@ window.switchScreen=function(s){
   if(s==='hoje')renderHoje();
   if(s==='semana'){updateWeekHeader();renderDays();}
   if(s==='hist')renderHistory();
-  if(s==='cfg'){renderShiftTypes();renderTasks();}
+  if(s==='cfg'){renderShiftTypes();renderTasks();renderThresholds();}
 };
 
 // ── HOJE ──────────────────────────────────────────────────
@@ -630,8 +662,7 @@ window.setShift=async function(k,v){const wd=getWD(curMon);if(!wd.shifts)wd.shif
 function updateInfo(){
   const wd=getWD(curMon);let h=0;DAYS_KEY.forEach(k=>h+=getShiftHours(wd.shifts?.[k]));
   h=Math.round(h*10)/10;
-  const t=h<=11?'🟢 Leve':h<=22?'🟡 Normal':h<=30?'🟠 Pesada':'🔴 Muito pesada';
-  document.getElementById('week-info').innerHTML=`<strong>${h}h</strong> de trabalho &nbsp;·&nbsp; ${t}`;
+  document.getElementById('week-info').innerHTML=`<strong>${h}h</strong> de trabalho &nbsp;·&nbsp; ${getWeekType(h)}`;
 }
 
 function renderPlan(plan,checked){
@@ -674,15 +705,15 @@ function renderHistory(){
     const total=Object.keys(wd.checked||{}).length;
     const done=Object.values(wd.checked||{}).filter(Boolean).length;
     const pct=total>0?Math.round(done/total*100):0;
-    const wt=h<=11?'Leve':h<=22?'Normal':h<=30?'Pesada':'Muito pesada';
-    const wtColor=h<=11?'#1D9E75':h<=22?'#D97706':h<=30?'#D85A30':'#E24B4A';
+    const wt=getWeekTypeText(h);const wtLabel=getWeekType(h);
+    const wtColor=h<=thresholds.leve?'#1D9E75':h<=thresholds.normal?'#D97706':h<=thresholds.pesada?'#D85A30':'#E24B4A';
     // dates
     const mon=new Date(k);mon.setHours(12);
     const sun=new Date(mon);sun.setDate(sun.getDate()+6);
     return`<div class="hist-week">
       <div class="hw-header">
         <span class="hw-dates">${fmt(mon)} – ${fmt(sun)}</span>
-        <span class="hw-type" style="background:${wtColor}22;color:${wtColor};">${wt}</span>
+        <span class="hw-type" style="background:${wtColor}22;color:${wtColor};">${wtLabel.replace(/[🟢🟡🟠🔴]\s*/,'')}</span>
       </div>
       <div class="hw-stats">
         <div class="hw-stat"><strong>${Math.round(h)}h</strong>trabalho</div>
