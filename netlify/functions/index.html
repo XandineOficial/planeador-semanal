@@ -40,7 +40,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .screen{display:none;padding-bottom:1rem;}
 .screen.active{display:block;}
 
-/* HOJE */
 .today-hero{padding:1rem 1rem 0.5rem;}
 .today-date{font-size:13px;color:var(--text2);}
 .today-title{font-size:22px;font-weight:700;margin-top:2px;}
@@ -55,6 +54,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sleep-icon{font-size:20px;color:var(--text2);}
 .sleep-info{font-size:13px;font-weight:500;}
 .sleep-meta{font-size:11px;color:var(--text2);margin-top:1px;}
+
+.week-strip{display:flex;gap:6px;padding:0 1rem;margin-bottom:0.75rem;overflow-x:auto;}
+.week-strip::-webkit-scrollbar{display:none;}
+.strip-day{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 8px;border-radius:var(--radius);background:var(--bg2);min-width:44px;}
+.strip-day.today{background:var(--text);}
+.strip-day.today .strip-name,.strip-day.today .strip-num{color:var(--bg);}
+.strip-name{font-size:10px;color:var(--text2);font-weight:500;}
+.strip-num{font-size:14px;font-weight:700;color:var(--text);}
+.strip-shift{width:8px;height:8px;border-radius:50%;margin-top:2px;}
+
 .section-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;padding:0 1rem;margin-bottom:0.5rem;margin-top:0.75rem;}
 .day-block{display:grid;grid-template-columns:62px 1fr auto;gap:8px;align-items:center;padding:8px 1rem 8px 1.25rem;border-left:2px solid transparent;margin-left:1rem;}
 .day-block.work{border-left-color:var(--blue);}
@@ -62,7 +71,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .day-block.rest{border-left-color:#888780;}
 .day-block.gaming{border-left-color:var(--purple);}
 .day-block.sleep{border-left-color:#8B5CF6;}
-.db-time{font-size:12px;color:var(--text2);font-weight:500;line-height:1.3;}
+.db-time{font-size:12px;color:var(--text2);font-weight:500;}
 .db-title{font-size:14px;color:var(--text);font-weight:500;}
 .db-title.done{text-decoration:line-through;color:var(--text2);}
 .db-sub{font-size:11px;color:var(--text3);margin-top:1px;}
@@ -81,7 +90,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .no-plan i{font-size:36px;opacity:0.35;}
 .no-plan p{font-size:13px;margin-top:10px;line-height:1.5;}
 
-/* SEMANA */
 .week-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 1rem;border-bottom:0.5px solid var(--border);}
 .nav-arrow{background:none;border:0.5px solid var(--border2);border-radius:var(--radius);width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);}
 .week-center{text-align:center;}
@@ -114,46 +122,35 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .s-badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;margin-left:auto;}
 .regen-wrap{padding:0.75rem 1rem;border-top:0.5px solid var(--border);}
 
-/* import modal */
-.import-box{width:100%;min-height:120px;padding:10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:monospace;resize:vertical;}
-.import-hint{font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5;}
-
-/* CFG */
 .cfg-head{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.6rem;margin-top:1rem;padding:0 1rem;}
+.cfg-section{padding:0 1rem;margin-bottom:1rem;}
 .cfg-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:11px 13px;margin-bottom:7px;}
 .cfg-top{display:flex;align-items:center;justify-content:space-between;}
 .cfg-name{font-size:14px;font-weight:500;}
 .cfg-meta{font-size:12px;color:var(--text2);margin-top:3px;}
+.cfg-actions{display:flex;gap:2px;}
 .icon-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:3px 5px;}
 .add-btn{width:100%;padding:10px;background:var(--bg2);border:0.5px dashed var(--border2);border-radius:var(--radius-lg);font-size:13px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
 .shift-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.cfg-section{padding:0 1rem;margin-bottom:1rem;}
 
-/* modal */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center;}
 .modal-bg.open{display:flex;}
-.modal{background:var(--bg);border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:1.5rem 1rem 2rem;width:100%;max-width:430px;max-height:88vh;overflow-y:auto;}
+.modal{background:var(--bg);border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:1.5rem 1rem 2rem;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;}
 .modal h3{font-size:16px;font-weight:600;margin-bottom:1rem;}
 .field{margin-bottom:12px;}
 .field label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;}
-.field input,.field select{width:100%;padding:10px 11px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);}
+.field input,.field select,.field textarea{width:100%;padding:10px 11px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);}
 .modal-actions{display:flex;gap:8px;margin-top:14px;}
 .modal-cancel{flex:1;padding:11px;background:var(--bg2);border:none;border-radius:var(--radius);font-size:14px;cursor:pointer;color:var(--text);}
 .modal-save{flex:2;padding:11px;background:var(--text);border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;color:var(--bg);}
 .color-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:6px;}
 .color-opt{width:34px;height:34px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
 .color-opt.sel{border-color:var(--text);}
-.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;}
-@keyframes spin{to{transform:rotate(360deg);}}
 .star-row{display:flex;gap:8px;margin-top:6px;}
 .star-btn{font-size:24px;cursor:pointer;opacity:0.3;}
 .star-btn.active{opacity:1;}
-
-/* prompt card */
-.prompt-card{margin:0 1rem 0.75rem;background:var(--amber-bg);border-radius:var(--radius-lg);padding:12px 14px;}
-.prompt-card-title{font-size:12px;font-weight:600;color:var(--amber-text);margin-bottom:6px;}
-.prompt-card p{font-size:12px;color:var(--amber-text);line-height:1.5;}
-.copy-btn{margin-top:8px;padding:7px 14px;background:var(--amber-text);color:#fff;border:none;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;}
+.import-box{width:100%;min-height:120px;padding:10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:monospace;resize:vertical;}
+.note-box{width:100%;padding:10px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);resize:none;min-height:80px;}
 </style>
 </head>
 <body>
@@ -163,11 +160,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">A ligar...</span></div>
   </div>
   <div class="content">
-    <!-- HOJE -->
-    <div class="screen active" id="screen-hoje">
-      <div id="hoje-content"></div>
-    </div>
-    <!-- SEMANA -->
+    <div class="screen active" id="screen-hoje"><div id="hoje-content"></div></div>
     <div class="screen" id="screen-semana">
       <div class="week-nav">
         <button class="nav-arrow" onclick="changeWeek(-1)"><i class="ti ti-chevron-left"></i></button>
@@ -190,20 +183,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div style="height:1rem;"></div>
       </div>
       <div id="week-plano-pane" style="display:none;">
-        <div id="plan-area"><div class="no-plan"><i class="ti ti-calendar-off"></i><p>Ainda não tens plano.<br>Copia o pedido, cola no Claude,<br>depois importa o JSON aqui.</p></div></div>
-        <div class="regen-wrap" id="import-bar">
-          <button class="btn" onclick="openModal('import')">📥 Importar plano do Claude</button>
-        </div>
+        <div id="plan-area"><div class="no-plan"><i class="ti ti-calendar-off"></i><p>Ainda sem plano.<br>Copia o pedido, cola no Claude,<br>depois importa o JSON aqui.</p></div></div>
+        <div class="regen-wrap"><button class="btn" onclick="openModal('import')">📥 Importar plano do Claude</button></div>
       </div>
     </div>
-    <!-- CFG -->
     <div class="screen" id="screen-cfg">
       <div style="height:0.5rem;"></div>
       <div class="cfg-head">Tipos de turno</div>
       <div class="cfg-section">
         <div id="shift-types-list"></div>
         <button class="add-btn" onclick="openModal('shifttype')"><i class="ti ti-plus"></i> Criar tipo de turno</button>
-        <p style="font-size:11px;color:var(--text3);margin-top:8px;">ex: M (7h15, 5.5h), IT (12h15, 11h), Farmácia (13h, 4h)</p>
+        <p style="font-size:11px;color:var(--text3);margin-top:8px;">ex: M (7h15, 5.5h), IT (12h15, 11h)</p>
       </div>
       <div class="cfg-head">Tarefas fixas</div>
       <div class="cfg-section">
@@ -224,7 +214,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
-<!-- MODAL -->
 <div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
   <div class="modal" onclick="event.stopPropagation()">
     <h3 id="m-title">—</h3>
@@ -232,6 +221,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="field"><label>Nome (ex: M, IT, Farmácia 4h)</label><input type="text" id="st-name"></div>
       <div class="field"><label>Hora de início</label><input type="time" id="st-start" value="07:15"></div>
       <div class="field"><label>Duração (horas)</label><input type="number" id="st-hours" value="5.5" min="0.5" max="24" step="0.5"></div>
+      <div class="field"><label>Hora chegada a casa (estimada)</label><input type="time" id="st-home" value="14:00"></div>
       <div class="field"><label>Cor</label><div class="color-grid" id="color-grid"></div></div>
       <div class="field"><label>Notas (opcional)</label><input type="text" id="st-notes" placeholder="ex: seguido de farmácia"></div>
     </div>
@@ -250,17 +240,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div id="m-sleep" style="display:none;">
       <div class="field"><label>Deitei às</label><input type="time" id="sl-bed" value="23:00"></div>
       <div class="field"><label>Acordei às</label><input type="time" id="sl-wake" value="07:00"></div>
-      <div class="field"><label>Qualidade</label>
-        <div class="star-row" id="star-row">
-          <span class="star-btn" onclick="setStar(1)">⭐</span><span class="star-btn" onclick="setStar(2)">⭐</span><span class="star-btn" onclick="setStar(3)">⭐</span><span class="star-btn" onclick="setStar(4)">⭐</span><span class="star-btn" onclick="setStar(5)">⭐</span>
-        </div>
-      </div>
+      <div class="field"><label>Qualidade</label><div class="star-row" id="star-row"><span class="star-btn" onclick="setStar(1)">⭐</span><span class="star-btn" onclick="setStar(2)">⭐</span><span class="star-btn" onclick="setStar(3)">⭐</span><span class="star-btn" onclick="setStar(4)">⭐</span><span class="star-btn" onclick="setStar(5)">⭐</span></div></div>
       <div class="field"><label>Nota (opcional)</label><input type="text" id="sl-note" placeholder="ex: acordei 2x..."></div>
     </div>
     <div id="m-import" style="display:none;">
       <p style="font-size:13px;color:var(--text2);margin-bottom:10px;">Cola aqui o JSON gerado pelo Claude:</p>
       <textarea class="import-box" id="import-json" placeholder='{"weekSummary":{...},"days":[...]}'></textarea>
-      <p class="import-hint">Copia o bloco JSON completo da resposta do Claude e cola aqui. A app interpreta e apresenta o plano automaticamente.</p>
+      <p style="font-size:11px;color:var(--text3);margin-top:6px;">Copia o bloco JSON completo da resposta do Claude.</p>
+    </div>
+    <div id="m-note" style="display:none;">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:10px;">Nota rápida do dia:</p>
+      <textarea class="note-box" id="note-text" placeholder="ex: não fui ao ginásio, estava mais cansado depois do turno..."></textarea>
+    </div>
+    <div id="m-edit-task" style="display:none;">
+      <div class="field"><label>Nome</label><input type="text" id="et-name"></div>
+      <div class="field"><label>Duração (minutos)</label><input type="number" id="et-dur" min="15" max="300" step="15"></div>
+      <div id="et-flex-extra">
+        <div class="field"><label>Preferência horário</label><select id="et-pref"><option value="manha">Manhã</option><option value="tarde">Tarde/Noite</option><option value="qualquer">Tanto faz</option></select></div>
+        <div class="field"><label>Vezes/semana (ideal)</label><input type="number" id="et-freq" min="1" max="7"></div>
+      </div>
+      <div id="et-fixed-extra" style="display:none;">
+        <div class="field"><label>Dia</label><select id="et-day"><option value="0">Segunda</option><option value="1">Terça</option><option value="2">Quarta</option><option value="3">Quinta</option><option value="4">Sexta</option><option value="5">Sábado</option><option value="6">Domingo</option></select></div>
+        <div class="field"><label>Hora</label><input type="time" id="et-time"></div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
@@ -272,15 +274,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import{getFirestore,doc,getDoc,setDoc}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
 const fbApp=initializeApp({apiKey:"AIzaSyB67hGNCNIOHX1TdMZs3SNHn5dNVBRjP_4",authDomain:"planeador-semanal.firebaseapp.com",projectId:"planeador-semanal",storageBucket:"planeador-semanal.firebasestorage.app",messagingSenderId:"460355745741",appId:"1:460355745741:web:b31c60aae0b6cae0e8f684"});
 const db=getFirestore(fbApp);
 const UID='alex';
-
 const DAYS_PT=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
 const DAYS_KEY=['segunda','terca','quarta','quinta','sexta','sabado','domingo'];
 const MONTHS=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 const COLORS=['#1D9E75','#378ADD','#7F77DD','#D4537E','#D85A30','#D97706','#639922','#E24B4A','#888780','#1a1a18'];
+const DAY_NAMES_SHORT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
 function getMonday(d){const c=new Date(d);const day=c.getDay();c.setDate(c.getDate()+(day===0?-6:1-day));c.setHours(0,0,0,0);return c;}
 function wKey(m){return m.toISOString().slice(0,10);}
@@ -288,7 +289,7 @@ function dKey(d){return d.toISOString().slice(0,10);}
 function fmt(d){return`${d.getDate()} ${MONTHS[d.getMonth()]}`;}
 function isToday(d){const t=new Date();return d.getDate()===t.getDate()&&d.getMonth()===t.getMonth()&&d.getFullYear()===t.getFullYear();}
 function timeToMin(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
-function minToTime(m){return`${String(Math.floor(m/60)%24).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
+function minToTime(m){const mm=((m%1440)+1440)%1440;return`${String(Math.floor(mm/60)).padStart(2,'0')}:${String(mm%60).padStart(2,'0')}`;}
 function durFmt(min){return min>=60?`${(min/60).toFixed(1).replace('.0','')}h`:`${min}min`;}
 
 function setSyncStatus(s){
@@ -301,19 +302,19 @@ async function fbSet(path,data){try{setSyncStatus('syncing');await setDoc(doc(db
 async function fbGet(path){try{const s=await getDoc(doc(db,path));return s.exists()?s.data():null;}catch(e){setSyncStatus('offline');return null;}}
 
 let curMon=getMonday(new Date());
-let weekData={};let sleepData={};let energyData={};
-let nid=30;let mMode=null;let selColor=COLORS[0];let selStar=0;
+let weekData={};let sleepData={};let energyData={};let noteData={};
+let nid=30;let mMode=null;let selColor=COLORS[0];let selStar=0;let editingId=null;let editingType=null;
 
 let shiftTypes=[
-  {id:'st1',name:'M',startTime:'07:15',hours:5.5,color:'#1D9E75',notes:'Manhã'},
-  {id:'st2',name:'I',startTime:'12:15',hours:5.5,color:'#378ADD',notes:'Intermédio'},
-  {id:'st3',name:'T',startTime:'17:15',hours:5.5,color:'#D85A30',notes:'Tarde'},
-  {id:'st4',name:'IT',startTime:'12:15',hours:11,color:'#7F77DD',notes:'Intermédio+Tarde'},
-  {id:'st5',name:'MIT',startTime:'07:15',hours:15.5,color:'#E24B4A',notes:'Manhã+Inter+Tarde'},
+  {id:'st1',name:'M',startTime:'07:15',hours:5.5,homeTime:'14:00',color:'#1D9E75',notes:'Manhã'},
+  {id:'st2',name:'I',startTime:'12:15',hours:5.5,homeTime:'19:00',color:'#378ADD',notes:'Intermédio'},
+  {id:'st3',name:'T',startTime:'17:15',hours:5.5,homeTime:'00:00',color:'#D85A30',notes:'Tarde'},
+  {id:'st4',name:'IT',startTime:'12:15',hours:11,homeTime:'19:00',color:'#7F77DD',notes:'Intermédio+Tarde'},
+  {id:'st5',name:'MIT',startTime:'07:15',hours:15.5,homeTime:'00:00',color:'#E24B4A',notes:'Manhã+Inter+Tarde'},
 ];
 let flexTasks=[
   {id:10,name:'Ginásio',pref:'manha',freq:3,duration:75},
-  {id:11,name:'Leitura',pref:'qualquer',freq:4,duration:30},
+  {id:11,name:'Leitura',pref:'manha',freq:4,duration:30},
   {id:12,name:'Meditação',pref:'manha',freq:5,duration:15},
   {id:13,name:'Diário',pref:'manha',freq:3,duration:20},
   {id:14,name:'Gaming',pref:'tarde',freq:3,duration:90},
@@ -327,6 +328,7 @@ async function saveConfig(){await fbSet(`users/${UID}/config/main`,{shiftTypes,f
 async function saveWeek(key){const wd=weekData[key];if(!wd)return;await fbSet(`users/${UID}/weeks/${key}`,{shifts:wd.shifts||{},plan:wd.plan||null,checked:wd.checked||{}});}
 async function saveSleep(key,data){await fbSet(`users/${UID}/sleep/${key}`,data);}
 async function saveEnergy(key,val){await fbSet(`users/${UID}/energy/${key}`,{value:val});}
+async function saveNote(key,val){await fbSet(`users/${UID}/notes/${key}`,{text:val});}
 
 async function loadAll(){
   setSyncStatus('syncing');
@@ -335,7 +337,9 @@ async function loadAll(){
   await ensureWeekLoaded(curMon);
   const today=new Date();
   for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);const k=dKey(d);const sl=await fbGet(`users/${UID}/sleep/${k}`);if(sl)sleepData[k]=sl;}
-  const ek=dKey(today);const en=await fbGet(`users/${UID}/energy/${ek}`);if(en)energyData[ek]=en.value;
+  const ek=dKey(today);
+  const en=await fbGet(`users/${UID}/energy/${ek}`);if(en)energyData[ek]=en.value;
+  const nt=await fbGet(`users/${UID}/notes/${ek}`);if(nt)noteData[ek]=nt.text;
   setSyncStatus('ok');
   renderAll();
 }
@@ -354,13 +358,24 @@ function getShiftLabel(sid){const st=getShift(sid);return st?st.name:'Folga';}
 function getShiftHours(sid){const st=getShift(sid);return st?st.hours:0;}
 function weekDays(m){return Array.from({length:7},(_,i)=>{const d=new Date(m);d.setDate(d.getDate()+i);return d;});}
 
-function suggestSleep(tomorrowSid){
-  const st=getShift(tomorrowSid);
-  if(!st)return{bed:'23:00',wake:'07:30',note:'Dia de folga'};
-  const startMin=timeToMin(st.startTime);
-  const wakeMin=Math.max(360,startMin-75);
-  const bedMin=wakeMin-480;
-  return{bed:minToTime(bedMin<0?bedMin+1440:bedMin),wake:minToTime(wakeMin),note:`Turno ${st.name} às ${st.startTime}`};
+// ── sono inteligente ───────────────────────────────────────
+function calcSleepSchedule(sid){
+  const st=getShift(sid);
+  if(!st){
+    // folga — deitar 23h, dormir 8h
+    return{bed:'23:00',wake:'07:00',note:'Dia de folga'};
+  }
+  const homeMin=timeToMin(st.homeTime||'19:00');
+  // rotina noturna: 45min após chegar (jantar, higiene)
+  const bedMin=homeMin+75;
+  // 8h de sono
+  const wakeMin=bedMin+480;
+  // se hora de acordar for antes do início do turno seguinte com margem de 1h, ok
+  return{
+    bed:minToTime(bedMin),
+    wake:minToTime(wakeMin),
+    note:`Chega a casa ${st.homeTime} → cama às ${minToTime(bedMin)}`
+  };
 }
 
 function buildHistorySummary(){
@@ -376,7 +391,7 @@ function buildHistorySummary(){
   }).join('\n');
 }
 
-// ── COPIAR PROMPT ─────────────────────────────────────────
+// ── copy prompt ────────────────────────────────────────────
 window.copyPrompt=function(){
   const wd=getWD(curMon);
   const days=weekDays(curMon);
@@ -386,14 +401,15 @@ window.copyPrompt=function(){
   const sDesc=DAYS_KEY.map((k,i)=>{
     const sid=wd.shifts?.[k]||'folga';const st=getShift(sid);
     const tmIdx=(i+1)%7;const tmSid=wd.shifts?.[DAYS_KEY[tmIdx]]||'folga';
-    const sleep=suggestSleep(tmSid);
-    return`${DAYS_PT[i]} ${days[i].getDate()}/${days[i].getMonth()+1}: ${st?`${st.name} (${st.startTime}, ${st.hours}h)`:'Folga'} | Dormir: ${sleep.bed} | Acordar: ${sleep.wake}`;
+    const sleep=calcSleepSchedule(tmSid);
+    return`${DAYS_PT[i]} ${days[i].getDate()}/${days[i].getMonth()+1}: ${st?`${st.name} (${st.startTime}, ${st.hours}h, chega a casa ~${st.homeTime})`:'Folga'} | Dormir: ${sleep.bed} | Acordar: ${sleep.wake}`;
   }).join('\n');
 
   const fDesc=fixedTasks.length?fixedTasks.map(t=>`- ${t.name}: ${DAYS_PT[t.dayIdx]} às ${t.time}, ${t.duration}min`).join('\n'):'Nenhuma';
   const flDesc=flexTasks.map(t=>`- ${t.name}: ${t.freq}×/semana, ${t.duration}min, preferência ${t.pref==='manha'?'manhã':t.pref==='tarde'?'tarde/noite':'qualquer'}`).join('\n');
   const hist=buildHistorySummary();
   const energy=energyData[dKey(new Date())]||'normal';
+  const todayNote=noteData[dKey(new Date())]||'';
 
   const prompt=`Gera o plano semanal no formato JSON para a minha app.
 
@@ -401,7 +417,7 @@ SEMANA (dia: turno | hora dormir | hora acordar):
 ${sDesc}
 
 CARGA: ${Math.round(totalH*10)/10}h — semana ${wt}
-ENERGIA HOJE: ${energy}
+ENERGIA HOJE: ${energy}${todayNote?`\nNOTA: ${todayNote}`:''}
 
 HISTÓRICO:
 ${hist}
@@ -412,35 +428,26 @@ ${fDesc}
 TAREFAS FLEXÍVEIS:
 ${flDesc}
 
-REGRAS:
+REGRAS CRÍTICAS:
 - Plano completo do acordar ao dormir com horas exatas para TUDO.
-- Inclui: Acordar, Higiene (15min), Pequeno-almoço (20min), Almoço (~13h, 30min), Jantar (~20h, 30min), Dormir.
-- Respeita rigorosamente horas e duração de cada turno.
-- Após turno, mínimo 1h antes de atividade física.
+- Inclui sempre: Acordar, Higiene (15min), Pequeno-almoço (20min), Almoço (~13h, 30min), Jantar após chegar a casa (~30min), Dormir à hora indicada.
+- Respeita rigorosamente horas de início e duração de cada turno.
+- Após turno T ou MIT (chegada ~00h): só rotina noturna e dormir, NADA mais.
+- Após turno M (chegada ~14h): tarde livre para atividades.
+- Após turno I ou IT (chegada ~19h): jantar + 1 atividade leve máx.
+- Antes do turno: se há 2h+ de margem pela manhã, coloca atividades matinais (meditação, leitura, diário). Se há 3h+, pode incluir ginásio.
 - Semana pesada: menos atividades opcionais, mais descanso.
-- Gaming e stream são legítimos.
-- Distribui tarefas flexíveis de forma equilibrada.
+- Gaming e stream são legítimos, inclui sem culpa.
 
 Responde APENAS com o bloco JSON, sem texto antes ou depois, sem markdown:
 {"weekSummary":{"workHours":number,"activitiesPlanned":number,"restBlocks":number,"weekType":"string","historyNote":"string ou vazio"},"days":[{"day":"segunda","blocks":[{"time":"HH:MM","title":"string","duration":number,"type":"work|activity|rest|gaming|sleep"}]}]}`;
 
-  navigator.clipboard.writeText(prompt).then(()=>{
-    alert('✅ Pedido copiado! Cola numa conversa dedicada no Claude e importa o JSON aqui.');
-  }).catch(()=>{
-    prompt_fallback(prompt);
-  });
+  navigator.clipboard.writeText(prompt).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=prompt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  }).finally(()=>{alert('✅ Pedido copiado! Cola na conversa de planos no Claude.');});
 };
 
-function prompt_fallback(text){
-  const ta=document.createElement('textarea');
-  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
-  document.body.appendChild(ta);ta.select();
-  document.execCommand('copy');
-  document.body.removeChild(ta);
-  alert('✅ Pedido copiado! Cola numa conversa dedicada no Claude e importa o JSON aqui.');
-}
-
-// ── SCREENS ───────────────────────────────────────────────
+// ── screens ────────────────────────────────────────────────
 window.switchScreen=function(s){
   ['hoje','semana','cfg'].forEach(x=>{
     document.getElementById(`screen-${x}`).classList.toggle('active',x===s);
@@ -464,20 +471,39 @@ function renderHoje(){
   const todayPlan=wd.plan?.days?.find(d=>d.day===dayKey);
   const checked=wd.checked||{};
   const energy=energyData[todayKey]||null;
+  const todayNote=noteData[todayKey]||null;
+
+  // amanhã
   const tomorrow=new Date(now);tomorrow.setDate(tomorrow.getDate()+1);
   const tmIdx=tomorrow.getDay()===0?6:tomorrow.getDay()-1;
   const tmMon=getMonday(tomorrow);
   const tmWD=getWD(tmMon);
   const tmSid=tmWD.shifts?.[DAYS_KEY[tmIdx]]||'folga';
-  const sleepSug=suggestSleep(tmSid);
+  const sleepSug=calcSleepSchedule(tmSid);
   const sleepToday=sleepData[todayKey]||null;
-  const dayNames=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
+  // week strip
+  const weekMon=getMonday(now);
+  const wdCur=getWD(weekMon);
+  const stripDays=weekDays(weekMon);
+  const strip=stripDays.map((d,i)=>{
+    const k=DAYS_KEY[i];
+    const s=wdCur.shifts?.[k]||'folga';
+    const st=getShift(s);
+    const tod=isToday(d);
+    return`<div class="strip-day${tod?' today':''}">
+      <span class="strip-name">${DAY_NAMES_SHORT[d.getDay()]}</span>
+      <span class="strip-num">${d.getDate()}</span>
+      <div class="strip-shift" style="background:${st?st.color:'var(--border)'}"></div>
+    </div>`;
+  }).join('');
 
   let html=`<div class="today-hero">
-    <div class="today-date">${dayNames[now.getDay()]}, ${fmt(now)}</div>
+    <div class="today-date">${['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][now.getDay()]}, ${fmt(now)}</div>
     <div class="today-title">Olá, Alex</div>
     ${shift?`<span class="today-shift" style="background:${shift.color}22;color:${shift.color};">${shift.name} · ${shift.startTime} · ${shift.hours}h</span>`:`<span class="today-shift" style="background:var(--bg2);color:var(--text2);">Folga</span>`}
   </div>
+  <div style="padding:0 0 0.75rem;"><div class="week-strip">${strip}</div></div>
   <div class="energy-bar">
     <div class="energy-label">Energia hoje</div>
     <div class="energy-opts">
@@ -506,12 +532,21 @@ function renderHoje(){
     html+=`<div class="no-plan"><i class="ti ti-calendar-off"></i><p>Sem plano para hoje.<br>Vai a <strong>Semana</strong>, copia o pedido,<br>cola no Claude e importa o JSON.</p></div>`;
   }
 
+  // nota do dia
+  html+=`<div style="margin:0.75rem 1rem 0;display:flex;align-items:center;justify-content:space-between;">
+    <span style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Nota do dia</span>
+    <button onclick="openModal('note','${todayKey}')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text2);">${todayNote?'Editar':'+ Adicionar'}</button>
+  </div>
+  ${todayNote?`<div style="margin:6px 1rem 0;padding:10px 12px;background:var(--bg2);border-radius:var(--radius);font-size:13px;color:var(--text2);line-height:1.5;">${todayNote}</div>`:''}`;
+
+  // amanhã
   html+=`<div class="next-day-card">
     <div class="next-day-label">Amanhã · ${DAYS_PT[tmIdx]}</div>
     <div class="next-day-info">${getShift(tmSid)?`Turno ${getShiftLabel(tmSid)} às ${getShift(tmSid)?.startTime}`:'Folga'}</div>
     <div class="next-day-sleep"><i class="ti ti-moon" style="font-size:14px;color:var(--purple);"></i> Deitar às <strong>${sleepSug.bed}</strong> · Acordar às <strong>${sleepSug.wake}</strong></div>
     <div style="font-size:11px;color:var(--text3);margin-top:4px;">${sleepSug.note}</div>
-  </div>`;
+  </div>
+  <div style="height:1rem;"></div>`;
 
   document.getElementById('hoje-content').innerHTML=html;
 }
@@ -597,17 +632,57 @@ window.toggleCheckWeek=async function(key,safeId,btn){
 
 // ── CFG ───────────────────────────────────────────────────
 function renderShiftTypes(){
-  document.getElementById('shift-types-list').innerHTML=shiftTypes.map(s=>`<div class="cfg-card"><div class="cfg-top"><div style="display:flex;align-items:center;gap:8px;"><div class="shift-dot" style="background:${s.color};"></div><span class="cfg-name">${s.name}</span></div><button class="icon-btn" onclick="delShift('${s.id}')"><i class="ti ti-x"></i></button></div><div class="cfg-meta">${s.startTime} · ${s.hours}h${s.notes?' · '+s.notes:''}</div></div>`).join('');
+  document.getElementById('shift-types-list').innerHTML=shiftTypes.map(s=>`<div class="cfg-card"><div class="cfg-top"><div style="display:flex;align-items:center;gap:8px;"><div class="shift-dot" style="background:${s.color};"></div><span class="cfg-name">${s.name}</span></div><div class="cfg-actions"><button class="icon-btn" onclick="editShift('${s.id}')"><i class="ti ti-pencil"></i></button><button class="icon-btn" onclick="delShift('${s.id}')"><i class="ti ti-x"></i></button></div></div><div class="cfg-meta">${s.startTime} · ${s.hours}h · casa ~${s.homeTime||'?'}${s.notes?' · '+s.notes:''}</div></div>`).join('');
 }
 function renderTasks(){
-  document.getElementById('fixed-list').innerHTML=fixedTasks.length?fixedTasks.map(t=>`<div class="cfg-card"><div class="cfg-top"><span class="cfg-name">${t.name}</span><button class="icon-btn" onclick="delTask(${t.id},'fixed')"><i class="ti ti-x"></i></button></div><div class="cfg-meta">${DAYS_PT[t.dayIdx]} · ${t.time} · ${t.duration}min</div></div>`).join(''):'<p style="font-size:13px;color:var(--text3);padding:4px 0 10px;">Nenhuma</p>';
-  document.getElementById('flex-list').innerHTML=flexTasks.map(t=>`<div class="cfg-card"><div class="cfg-top"><span class="cfg-name">${t.name}</span><button class="icon-btn" onclick="delTask(${t.id},'flex')"><i class="ti ti-x"></i></button></div><div class="cfg-meta">${t.freq}×/sem · ${t.duration}min · ${t.pref==='manha'?'Manhã':t.pref==='tarde'?'Tarde':'Qualquer'}</div></div>`).join('');
+  document.getElementById('fixed-list').innerHTML=fixedTasks.length?fixedTasks.map(t=>`<div class="cfg-card"><div class="cfg-top"><span class="cfg-name">${t.name}</span><div class="cfg-actions"><button class="icon-btn" onclick="editTask(${t.id},'fixed')"><i class="ti ti-pencil"></i></button><button class="icon-btn" onclick="delTask(${t.id},'fixed')"><i class="ti ti-x"></i></button></div></div><div class="cfg-meta">${DAYS_PT[t.dayIdx]} · ${t.time} · ${t.duration}min</div></div>`).join(''):'<p style="font-size:13px;color:var(--text3);padding:4px 0 10px;">Nenhuma</p>';
+  document.getElementById('flex-list').innerHTML=flexTasks.map(t=>`<div class="cfg-card"><div class="cfg-top"><span class="cfg-name">${t.name}</span><div class="cfg-actions"><button class="icon-btn" onclick="editTask(${t.id},'flex')"><i class="ti ti-pencil"></i></button><button class="icon-btn" onclick="delTask(${t.id},'flex')"><i class="ti ti-x"></i></button></div></div><div class="cfg-meta">${t.freq}×/sem · ${t.duration}min · ${t.pref==='manha'?'Manhã':t.pref==='tarde'?'Tarde':'Qualquer'}</div></div>`).join('');
 }
 window.delShift=async function(id){shiftTypes=shiftTypes.filter(s=>s.id!==id);renderShiftTypes();renderDays();await saveConfig();};
-window.delTask=async function(id,type){
-  if(type==='fixed')fixedTasks=fixedTasks.filter(t=>t.id!==id);
-  else flexTasks=flexTasks.filter(t=>t.id!==id);
-  renderTasks();await saveConfig();
+window.delTask=async function(id,type){if(type==='fixed')fixedTasks=fixedTasks.filter(t=>t.id!==id);else flexTasks=flexTasks.filter(t=>t.id!==id);renderTasks();await saveConfig();};
+
+window.editShift=function(id){
+  const st=shiftTypes.find(s=>s.id===id);if(!st)return;
+  editingId=id;editingType='shifttype';
+  document.getElementById('m-title').textContent='Editar turno';
+  document.getElementById('m-shifttype').style.display='block';
+  document.getElementById('m-task').style.display='none';
+  document.getElementById('m-sleep').style.display='none';
+  document.getElementById('m-import').style.display='none';
+  document.getElementById('m-note').style.display='none';
+  document.getElementById('m-edit-task').style.display='none';
+  document.getElementById('st-name').value=st.name;
+  document.getElementById('st-start').value=st.startTime;
+  document.getElementById('st-hours').value=st.hours;
+  document.getElementById('st-home').value=st.homeTime||'19:00';
+  document.getElementById('st-notes').value=st.notes||'';
+  selColor=st.color;buildColorGrid();
+  mMode='edit-shifttype';
+  document.getElementById('modal-bg').classList.add('open');
+};
+
+window.editTask=function(id,type){
+  const list=type==='fixed'?fixedTasks:flexTasks;
+  const t=list.find(x=>x.id===id);if(!t)return;
+  editingId=id;editingType=type;
+  document.getElementById('m-title').textContent=type==='fixed'?'Editar tarefa fixa':'Editar tarefa flexível';
+  ['m-shifttype','m-task','m-sleep','m-import','m-note'].forEach(x=>document.getElementById(x).style.display='none');
+  document.getElementById('m-edit-task').style.display='block';
+  document.getElementById('et-name').value=t.name;
+  document.getElementById('et-dur').value=t.duration;
+  if(type==='flex'){
+    document.getElementById('et-flex-extra').style.display='block';
+    document.getElementById('et-fixed-extra').style.display='none';
+    document.getElementById('et-pref').value=t.pref;
+    document.getElementById('et-freq').value=t.freq;
+  }else{
+    document.getElementById('et-flex-extra').style.display='none';
+    document.getElementById('et-fixed-extra').style.display='block';
+    document.getElementById('et-day').value=t.dayIdx;
+    document.getElementById('et-time').value=t.time;
+  }
+  mMode='edit-task';
+  document.getElementById('modal-bg').classList.add('open');
 };
 
 // ── MODAL ─────────────────────────────────────────────────
@@ -616,26 +691,45 @@ window.selCol=function(c){selColor=c;buildColorGrid();};
 window.setStar=function(n){selStar=n;document.querySelectorAll('.star-btn').forEach((s,i)=>s.classList.toggle('active',i<n));};
 
 window.openModal=function(type,extra){
+  editingId=null;editingType=null;
   mMode=type+(extra?'_'+extra:'');
-  document.getElementById('m-shifttype').style.display=type==='shifttype'?'block':'none';
-  document.getElementById('m-task').style.display=(type==='fixed'||type==='flex')?'block':'none';
-  document.getElementById('m-sleep').style.display=type==='sleep'?'block':'none';
-  document.getElementById('m-import').style.display=type==='import'?'block':'none';
-  const titles={shifttype:'Novo tipo de turno',fixed:'Tarefa fixa',flex:'Tarefa flexível',sleep:'Registar sono',import:'Importar plano do Claude'};
+  const show=(id)=>document.getElementById(id).style.display='block';
+  const hide=(id)=>document.getElementById(id).style.display='none';
+  ['m-shifttype','m-task','m-sleep','m-import','m-note','m-edit-task'].forEach(hide);
+  const titles={shifttype:'Novo tipo de turno',fixed:'Tarefa fixa',flex:'Tarefa flexível',sleep:'Registar sono',import:'Importar plano do Claude',note:'Nota do dia'};
   document.getElementById('m-title').textContent=titles[type]||'—';
-  if(type==='shifttype'){selColor=COLORS[0];buildColorGrid();document.getElementById('st-name').value='';}
-  if(type==='fixed'||type==='flex'){document.getElementById('t-flex-extra').style.display=type==='flex'?'block':'none';document.getElementById('t-fixed-extra').style.display=type==='fixed'?'block':'none';document.getElementById('t-name').value='';}
-  if(type==='sleep'){selStar=0;document.querySelectorAll('.star-btn').forEach(s=>s.classList.remove('active'));}
-  if(type==='import'){document.getElementById('import-json').value='';}
+  if(type==='shifttype'){show('m-shifttype');selColor=COLORS[0];buildColorGrid();document.getElementById('st-name').value='';document.getElementById('st-home').value='19:00';}
+  if(type==='fixed'){show('m-task');document.getElementById('t-flex-extra').style.display='none';document.getElementById('t-fixed-extra').style.display='block';document.getElementById('t-name').value='';}
+  if(type==='flex'){show('m-task');document.getElementById('t-flex-extra').style.display='block';document.getElementById('t-fixed-extra').style.display='none';document.getElementById('t-name').value='';}
+  if(type==='sleep'){show('m-sleep');selStar=0;document.querySelectorAll('.star-btn').forEach(s=>s.classList.remove('active'));}
+  if(type==='import'){show('m-import');document.getElementById('import-json').value='';}
+  if(type==='note'){show('m-note');const k=extra||dKey(new Date());document.getElementById('note-text').value=noteData[k]||'';}
   document.getElementById('modal-bg').classList.add('open');
 };
-window.closeModal=function(e){if(!e||e.target===document.getElementById('modal-bg'))document.getElementById('modal-bg').classList.remove('open');};
+window.closeModal=function(e){if(!e||e.target===document.getElementById('modal-bg')){document.getElementById('modal-bg').classList.remove('open');editingId=null;editingType=null;}};
 
 window.saveModal=async function(){
   const type=mMode.split('_')[0];
-  if(type==='shifttype'){
+
+  if(mMode==='edit-shifttype'){
+    const st=shiftTypes.find(s=>s.id===editingId);if(!st)return;
+    st.name=document.getElementById('st-name').value.trim()||st.name;
+    st.startTime=document.getElementById('st-start').value;
+    st.hours=parseFloat(document.getElementById('st-hours').value)||st.hours;
+    st.homeTime=document.getElementById('st-home').value;
+    st.color=selColor;st.notes=document.getElementById('st-notes').value.trim();
+    renderShiftTypes();renderDays();await saveConfig();
+  }else if(mMode==='edit-task'){
+    const list=editingType==='fixed'?fixedTasks:flexTasks;
+    const t=list.find(x=>x.id===editingId);if(!t)return;
+    t.name=document.getElementById('et-name').value.trim()||t.name;
+    t.duration=parseInt(document.getElementById('et-dur').value)||t.duration;
+    if(editingType==='flex'){t.pref=document.getElementById('et-pref').value;t.freq=parseInt(document.getElementById('et-freq').value)||t.freq;}
+    else{t.dayIdx=parseInt(document.getElementById('et-day').value);t.time=document.getElementById('et-time').value;}
+    renderTasks();await saveConfig();
+  }else if(type==='shifttype'){
     const name=document.getElementById('st-name').value.trim();if(!name)return;
-    shiftTypes.push({id:'st'+Date.now(),name,startTime:document.getElementById('st-start').value,hours:parseFloat(document.getElementById('st-hours').value)||5.5,color:selColor,notes:document.getElementById('st-notes').value.trim()});
+    shiftTypes.push({id:'st'+Date.now(),name,startTime:document.getElementById('st-start').value,hours:parseFloat(document.getElementById('st-hours').value)||5.5,homeTime:document.getElementById('st-home').value||'19:00',color:selColor,notes:document.getElementById('st-notes').value.trim()});
     renderShiftTypes();renderDays();await saveConfig();
   }else if(type==='fixed'||type==='flex'){
     const name=document.getElementById('t-name').value.trim();if(!name)return;
@@ -654,12 +748,20 @@ window.saveModal=async function(){
       const wd=getWD(curMon);
       wd.plan=plan;
       await saveWeek(wKey(curMon));
-      renderPlan(plan,wd.checked);
-      if(document.getElementById('screen-hoje').classList.contains('active'))renderHoje();
-      alert('✅ Plano importado com sucesso!');
-    }catch(e){alert('❌ JSON inválido. Copia o bloco JSON completo da resposta do Claude.');}
+      // atualiza vista plano se aberta
+      if(document.getElementById('week-plano-pane').style.display!=='none')renderPlan(plan,wd.checked);
+      // atualiza hoje se for semana atual
+      const nowMon=wKey(getMonday(new Date()));
+      if(wKey(curMon)===nowMon)renderHoje();
+      alert('✅ Plano importado!');
+    }catch(e){alert('❌ JSON inválido. Copia o bloco JSON completo.');}
+  }else if(type==='note'){
+    const key=mMode.replace('note_','');
+    const val=document.getElementById('note-text').value.trim();
+    noteData[key]=val;await saveNote(key,val);renderHoje();
   }
   document.getElementById('modal-bg').classList.remove('open');
+  editingId=null;editingType=null;
 };
 
 function renderAll(){updateWeekHeader();renderDays();renderHoje();}
