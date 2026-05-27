@@ -411,13 +411,13 @@ window.copyPrompt=function(){
   const energy=energyData[dKey(new Date())]||'normal';
   const todayNote=noteData[dKey(new Date())]||'';
 
-  const prompt=`Gera o plano semanal no formato JSON para a minha app.
+  const prompt=`DADOS DA SEMANA:
 
-SEMANA (dia: turno | hora dormir | hora acordar):
+TURNOS (dia: turno | hora dormir sugerida | hora acordar sugerida):
 ${sDesc}
 
 CARGA: ${Math.round(totalH*10)/10}h — semana ${wt}
-ENERGIA HOJE: ${energy}${todayNote?`\nNOTA: ${todayNote}`:''}
+ENERGIA HOJE: ${energy}${todayNote?`\nNOTA DO DIA: ${todayNote}`:''}
 
 HISTÓRICO:
 ${hist}
@@ -426,21 +426,7 @@ TAREFAS FIXAS:
 ${fDesc}
 
 TAREFAS FLEXÍVEIS:
-${flDesc}
-
-REGRAS CRÍTICAS:
-- Plano completo do acordar ao dormir com horas exatas para TUDO.
-- Inclui sempre: Acordar, Higiene (15min), Pequeno-almoço (20min), Almoço (~13h, 30min), Jantar após chegar a casa (~30min), Dormir à hora indicada.
-- Respeita rigorosamente horas de início e duração de cada turno.
-- Após turno T ou MIT (chegada ~00h): só rotina noturna e dormir, NADA mais.
-- Após turno M (chegada ~14h): tarde livre para atividades.
-- Após turno I ou IT (chegada ~19h): jantar + 1 atividade leve máx.
-- Antes do turno: se há 2h+ de margem pela manhã, coloca atividades matinais (meditação, leitura, diário). Se há 3h+, pode incluir ginásio.
-- Semana pesada: menos atividades opcionais, mais descanso.
-- Gaming e stream são legítimos, inclui sem culpa.
-
-Responde APENAS com o bloco JSON, sem texto antes ou depois, sem markdown:
-{"weekSummary":{"workHours":number,"activitiesPlanned":number,"restBlocks":number,"weekType":"string","historyNote":"string ou vazio"},"days":[{"day":"segunda","blocks":[{"time":"HH:MM","title":"string","duration":number,"type":"work|activity|rest|gaming|sleep"}]}]}`;
+${flDesc}`;
 
   navigator.clipboard.writeText(prompt).catch(()=>{
     const ta=document.createElement('textarea');ta.value=prompt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
@@ -498,29 +484,15 @@ function renderHoje(){
     </div>`;
   }).join('');
 
+  // ── AGENDA PRIMEIRO ──
   let html=`<div class="today-hero">
     <div class="today-date">${['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][now.getDay()]}, ${fmt(now)}</div>
     <div class="today-title">Olá, Alex</div>
     ${shift?`<span class="today-shift" style="background:${shift.color}22;color:${shift.color};">${shift.name} · ${shift.startTime} · ${shift.hours}h</span>`:`<span class="today-shift" style="background:var(--bg2);color:var(--text2);">Folga</span>`}
-  </div>
-  <div style="padding:0 0 0.75rem;"><div class="week-strip">${strip}</div></div>
-  <div class="energy-bar">
-    <div class="energy-label">Energia hoje</div>
-    <div class="energy-opts">
-      <button class="energy-btn${energy==='baixa'?' sel':''}" onclick="setEnergy('baixa','${todayKey}')">😴 Baixa</button>
-      <button class="energy-btn${energy==='normal'?' sel':''}" onclick="setEnergy('normal','${todayKey}')">👍 Normal</button>
-      <button class="energy-btn${energy==='boa'?' sel':''}" onclick="setEnergy('boa','${todayKey}')">⚡ Boa</button>
-    </div>
-  </div>
-  <div class="sleep-card" onclick="openModal('sleep','${todayKey}')">
-    <div class="sleep-left"><i class="ti ti-moon sleep-icon"></i>
-      <div>${sleepToday?`<div class="sleep-info">${(()=>{let b=timeToMin(sleepToday.bed),w=timeToMin(sleepToday.wake);if(w<=b)w+=1440;return Math.round((w-b)/60*10)/10;})()}h · ${'⭐'.repeat(sleepToday.stars)}</div><div class="sleep-meta">${sleepToday.bed} → ${sleepToday.wake}</div>`:'<div class="sleep-info">Registar sono</div><div class="sleep-meta">Toca para adicionar</div>'}</div>
-    </div>
-    <i class="ti ti-chevron-right" style="color:var(--text3);"></i>
   </div>`;
 
   if(todayPlan?.blocks?.length){
-    html+=`<div class="section-label">Plano de hoje</div>`;
+    html+=`<div class="section-label" style="margin-top:0.5rem;">Agenda de hoje</div>`;
     todayPlan.blocks.forEach((b,bi)=>{
       const k=`${wKey(mon)}-${dayKey}-${b.time}-${b.title}`;
       const done=checked[k]||false;
@@ -532,12 +504,36 @@ function renderHoje(){
     html+=`<div class="no-plan"><i class="ti ti-calendar-off"></i><p>Sem plano para hoje.<br>Vai a <strong>Semana</strong>, copia o pedido,<br>cola no Claude e importa o JSON.</p></div>`;
   }
 
+  // ── RESTO ABAIXO ──
+  html+=`<div style="height:0.75rem;border-top:0.5px solid var(--border);margin-top:0.75rem;"></div>`;
+
+  // strip semanal
+  html+=`<div style="padding:0.75rem 0 0;"><div class="week-strip">${strip}</div></div>`;
+
+  // energia
+  html+=`<div class="energy-bar">
+    <div class="energy-label">Energia hoje</div>
+    <div class="energy-opts">
+      <button class="energy-btn${energy==='baixa'?' sel':''}" onclick="setEnergy('baixa','${todayKey}')">😴 Baixa</button>
+      <button class="energy-btn${energy==='normal'?' sel':''}" onclick="setEnergy('normal','${todayKey}')">👍 Normal</button>
+      <button class="energy-btn${energy==='boa'?' sel':''}" onclick="setEnergy('boa','${todayKey}')">⚡ Boa</button>
+    </div>
+  </div>`;
+
+  // sono
+  html+=`<div class="sleep-card" onclick="openModal('sleep','${todayKey}')">
+    <div class="sleep-left"><i class="ti ti-moon sleep-icon"></i>
+      <div>${sleepToday?`<div class="sleep-info">${(()=>{let b=timeToMin(sleepToday.bed),w=timeToMin(sleepToday.wake);if(w<=b)w+=1440;return Math.round((w-b)/60*10)/10;})()}h · ${'⭐'.repeat(sleepToday.stars)}</div><div class="sleep-meta">${sleepToday.bed} → ${sleepToday.wake}</div>`:'<div class="sleep-info">Registar sono</div><div class="sleep-meta">Toca para adicionar</div>'}</div>
+    </div>
+    <i class="ti ti-chevron-right" style="color:var(--text3);"></i>
+  </div>`;
+
   // nota do dia
-  html+=`<div style="margin:0.75rem 1rem 0;display:flex;align-items:center;justify-content:space-between;">
+  html+=`<div style="margin:0 1rem 0;display:flex;align-items:center;justify-content:space-between;">
     <span style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Nota do dia</span>
     <button onclick="openModal('note','${todayKey}')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text2);">${todayNote?'Editar':'+ Adicionar'}</button>
   </div>
-  ${todayNote?`<div style="margin:6px 1rem 0;padding:10px 12px;background:var(--bg2);border-radius:var(--radius);font-size:13px;color:var(--text2);line-height:1.5;">${todayNote}</div>`:''}`;
+  ${todayNote?`<div style="margin:6px 1rem 0.75rem;padding:10px 12px;background:var(--bg2);border-radius:var(--radius);font-size:13px;color:var(--text2);line-height:1.5;">${todayNote}</div>`:'<div style="height:0.75rem;"></div>'}`;
 
   // amanhã
   html+=`<div class="next-day-card">
