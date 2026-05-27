@@ -451,15 +451,20 @@ window.copyPrompt=function(){
   const wt=totalH<=11?'leve':totalH<=22?'normal':totalH<=30?'pesada':'muito pesada';
   const sDesc=DAYS_KEY.map((k,i)=>{
     const sid=wd.shifts?.[k]||'folga';const st=getShift(sid);
-    const tmIdx=(i+1)%7;const tmSid=wd.shifts?.[DAYS_KEY[tmIdx]]||'folga';
-    const sleep=calcSleepSchedule(tmSid);
-    return`${DAYS_PT[i]} ${days[i].getDate()}/${days[i].getMonth()+1}: ${st?`${st.name} (${st.startTime}, ${st.hours}h, chega ~${st.homeTime})`:'Folga'} | Dormir: ${sleep.bed} | Acordar: ${sleep.wake}`;
+    return`${DAYS_PT[i]} ${days[i].getDate()}/${days[i].getMonth()+1}: ${st?`${st.name} (${st.startTime}, ${st.hours}h, chega ~${st.homeTime})`:'Folga'}`;
   }).join('\n');
   const fDesc=fixedTasks.length?fixedTasks.map(t=>`- ${t.name}: ${DAYS_PT[t.dayIdx]} às ${t.time}, ${t.duration}min`).join('\n'):'Nenhuma';
   const flDesc=flexTasks.map(t=>`- ${t.name}: ${t.freq}×/semana, ${t.duration}min, preferência ${t.pref==='manha'?'manhã':t.pref==='tarde'?'tarde/noite':'qualquer'}`).join('\n');
   const energy=energyData[dKey(new Date())]||'normal';
   const todayNote=noteData[dKey(new Date())]||'';
   const hist=buildHistorySummary();
+
+  // sono recente
+  const sleepLines=Object.entries(sleepData).slice(-5).map(([k,v])=>{
+    let b=timeToMin(v.bed),w=timeToMin(v.wake);if(w<=b)w+=1440;
+    const h=Math.round((w-b)/60*10)/10;
+    return`${k}: ${h}h (qualidade ${v.stars}/5${v.note?', '+v.note:''})`;
+  }).join('\n')||'Sem dados';
 
   const prompt=`DADOS DA SEMANA:
 
@@ -471,6 +476,9 @@ ENERGIA HOJE: ${energy}${todayNote?`\nNOTA: ${todayNote}`:''}
 
 HISTÓRICO:
 ${hist}
+
+SONO RECENTE:
+${sleepLines}
 
 TAREFAS FIXAS:
 ${fDesc}
