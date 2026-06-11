@@ -376,9 +376,10 @@ let thresholds={leve:16,normal:27,pesada:38};
 let shiftTypes=[
   {id:'st1',name:'M',startTime:'07:15',hours:5.5,homeTime:'14:00',color:'#1D9E75',notes:'Manhã'},
   {id:'st2',name:'I',startTime:'12:15',hours:5.5,homeTime:'19:00',color:'#378ADD',notes:'Intermédio'},
-  {id:'st3',name:'T',startTime:'17:15',hours:5.5,homeTime:'00:00',color:'#D85A30',notes:'Tarde'},
-  {id:'st4',name:'IT',startTime:'12:15',hours:11,homeTime:'19:00',color:'#7F77DD',notes:'Intermédio+Tarde'},
-  {id:'st5',name:'MIT',startTime:'07:15',hours:15.5,homeTime:'00:00',color:'#E24B4A',notes:'Manhã+Inter+Tarde'},
+  {id:'st3',name:'T',startTime:'17:15',hours:5.5,homeTime:'00:15',color:'#D85A30',notes:'Tarde'},
+  {id:'st4',name:'IT',startTime:'12:15',hours:11,homeTime:'00:15',color:'#7F77DD',notes:'Intermédio+Tarde'},
+  {id:'st5',name:'MIT',startTime:'07:15',hours:15.5,homeTime:'00:15',color:'#E24B4A',notes:'Manhã+Inter+Tarde'},
+  {id:'st6',name:'MI',startTime:'07:15',hours:10.5,homeTime:'18:30',color:'#D4537E',notes:'Manhã+Intermédio'},
 ];
 let flexTasks=[
   {id:10,name:'Ginásio',pref:'manha',freq:3,duration:75},
@@ -402,8 +403,18 @@ async function loadAll(){
   setSyncStatus('syncing');
   const cfg=await fbGet(`users/${UID}/config/main`);
   if(cfg){if(cfg.shiftTypes)shiftTypes=cfg.shiftTypes;if(cfg.flexTasks)flexTasks=cfg.flexTasks;if(cfg.fixedTasks)fixedTasks=cfg.fixedTasks;if(cfg.nid)nid=cfg.nid;if(cfg.thresholds)thresholds=cfg.thresholds;}
+
+  // Carregar semana atual
   await ensureWeekLoaded(curMon);
+
+  // Carregar últimas 4 semanas para histórico
+  for(let i=1;i<=4;i++){
+    const past=new Date(curMon);past.setDate(past.getDate()-i*7);
+    await ensureWeekLoaded(past);
+  }
+
   const today=new Date();
+  // Carregar sono dos últimos 7 dias
   for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);const k=dKey(d);const sl=await fbGet(`users/${UID}/sleep/${k}`);if(sl)sleepData[k]=sl;}
   const ek=dKey(today);
   const en=await fbGet(`users/${UID}/energy/${ek}`);if(en)energyData[ek]=en.value;
@@ -426,13 +437,65 @@ function getShiftLabel(sid){const st=getShift(sid);return st?st.name:'Folga';}
 function getShiftHours(sid){const st=getShift(sid);return st?st.hours:0;}
 function weekDays(m){return Array.from({length:7},(_,i)=>{const d=new Date(m);d.setDate(d.getDate()+i);return d;});}
 
-function calcSleepSchedule(sid){
-  const st=getShift(sid);
-  if(!st)return{bed:'23:00',wake:'07:00',note:'Dia de folga'};
-  const homeMin=timeToMin(st.homeTime||'19:00');
-  const bedMin=homeMin+75;
-  const wakeMin=bedMin+480;
-  return{bed:minToTime(bedMin),wake:minToTime(wakeMin),note:`Chega ~${st.homeTime} → cama ${minToTime(bedMin)}`};
+function calcSleepSchedule(sid, prevSid){
+  // Objetivo base: 7h30 de sono. Mínimo absoluto: 7h. Nunca acordar antes das 05h00.
+  const TARGET=450; // 7h30 em minutos
+  const MIN_SLEEP=420; // 7h
+  const EARLIEST_WAKE=300; // 05h00
+
+  // Turno de amanhã — que horas precisa de estar pronto?
+  const nextShift=getShift(sid);
+  // Último turno de hoje (para avaliar recuperação)
+  const prevShift=getShift(prevSid);
+
+  // Determinar se hoje foi noite (T, IT, MIT) — precisa de recuperação
+  const wasNightShift=prevShift&&['T','IT','MIT'].some(n=>prevShift.name===n);
+
+  // Calcular hora de acordar necessária para amanhã
+  let latestWake; // mais tarde que pode acordar
+  if(!nextShift){
+    // Folga amanhã — sem obrigação
+    latestWake = wasNightShift ? 540 : 480; // 09h ou 08h
+  } else {
+    // Precisa de estar pronto para o turno
+    const startMin = timeToMin(nextShift.startTime);
+    const prepTime = 75; // 1h15 para preparar + deslocação
+    latestWake = startMin - prepTime;
+  }
+
+  // Garantir que não acorda demasiado cedo
+  latestWake = Math.max(latestWake, EARLIEST_WAKE);
+
+  // Calcular hora de deitar: wake - TARGET
+  let bedMin = latestWake - TARGET;
+
+  // Se hoje foi turno noturno (chega ~00h15), deitar não pode ser antes de 01h00
+  if(wasNightShift){
+    bedMin = Math.max(bedMin, 60); // mínimo 01h00
+    // E recalcular wake com esse bed + TARGET
+    latestWake = bedMin + TARGET;
+  }
+
+  // Se turno de hoje chegou tarde (T/IT/MIT), mesma lógica mesmo sem nextShift
+  if(!nextShift && wasNightShift){
+    bedMin = 60; // 01h00
+    latestWake = bedMin + TARGET; // 08h30
+  }
+
+  // Verificar se a hora de acordar é realista para o turno seguinte
+  const wakeTime = minToTime(((latestWake % 1440) + 1440) % 1440);
+  const bedTime = minToTime(((bedMin % 1440) + 1440) % 1440);
+
+  let note = '';
+  if(wasNightShift){
+    note = `Turno noturno hoje → recuperar. Cama ${bedTime}, acordar ${wakeTime}`;
+  } else if(!nextShift){
+    note = `Folga amanhã. Dormir bem — cama ${bedTime}, acordar ${wakeTime}`;
+  } else {
+    note = `${nextShift.name} às ${nextShift.startTime} → cama ${bedTime}, acordar ${wakeTime}`;
+  }
+
+  return{bed:bedTime, wake:wakeTime, note};
 }
 
 // ── HISTÓRICO ─────────────────────────────────────────────
@@ -491,26 +554,48 @@ window.copyPrompt=function(){
   const todayNote=noteData[dKey(new Date())]||'';
   const hist=buildHistorySummary();
 
-  // sono recente
-  const sleepLines=Object.entries(sleepData).slice(-5).map(([k,v])=>{
+  // sono recente com análise
+  const sleepEntries=Object.entries(sleepData).slice(-7);
+  const sleepLines=sleepEntries.map(([k,v])=>{
     let b=timeToMin(v.bed),w=timeToMin(v.wake);if(w<=b)w+=1440;
     const h=Math.round((w-b)/60*10)/10;
     return`${k}: ${h}h (qualidade ${v.stars}/5${v.note?', '+v.note:''})`;
-  }).join('\n')||'Sem dados';
+  }).join('\n')||'Sem dados de sono registados';
 
-  const prompt=`DADOS DA SEMANA:
+  // média de sono
+  let avgSleep='';
+  if(sleepEntries.length>0){
+    const total=sleepEntries.reduce((acc,[,v])=>{let b=timeToMin(v.bed),w=timeToMin(v.wake);if(w<=b)w+=1440;return acc+(w-b)/60;},0);
+    avgSleep=`Média: ${Math.round(total/sleepEntries.length*10)/10}h/noite nos últimos ${sleepEntries.length} dias`;
+  }
+
+  const prompt=`DADOS DA SEMANA PARA PLANEAMENTO:
 
 TURNOS DA SEMANA:
 ${sDesc}
 
-CARGA: ${Math.round(totalH*10)/10}h — semana ${wt} (critérios: leve <${thresholds.leve}h, normal <${thresholds.normal}h, pesada <${thresholds.pesada}h)
-ENERGIA HOJE: ${energy}${todayNote?`\nNOTA: ${todayNote}`:''}
+CARGA TOTAL: ${Math.round(totalH*10)/10}h — semana ${wt}
+(critérios: leve <${thresholds.leve}h, normal <${thresholds.normal}h, pesada <${thresholds.pesada}h)
 
-HISTÓRICO:
+ENERGIA HOJE: ${energy}${todayNote?`\nNOTA DO DIA: ${todayNote}`:''}
+
+HISTÓRICO RECENTE:
 ${hist}
 
 SONO RECENTE:
 ${sleepLines}
+${avgSleep}
+
+REGRAS DE SONO (obrigatórias):
+- Objetivo: 7h30 de sono por noite. Mínimo absoluto: 7h.
+- Nunca sugerir acordar antes das 05h00.
+- Após turno T, IT ou MIT (chega ~00h15): deitar mínimo 01h00, acordar com 7h30 → ~08h30. Nunca acordar antes das 07h00.
+- Após turno M ou I: deitar entre 22h30–23h30, acordar às 06h–07h conforme turno seguinte.
+- Após turno MI (chega ~19h): deitar 22h30–23h00, acordar 06h00–07h00.
+- Dia de folga sem turno seguinte cedo: deixar dormir até 07h00–08h00 para recuperação.
+- Se turno seguinte é M (07h15): acordar 06h00 máximo → deitar 22h00–22h30.
+- NUNCA calcular hora de acordar recuando desde o turno se isso der antes das 05h00.
+- Priorizar recuperação de sono em semanas pesadas.
 
 TAREFAS FIXAS:
 ${fDesc}
@@ -520,7 +605,7 @@ ${flDesc}`;
 
   navigator.clipboard.writeText(prompt).catch(()=>{
     const ta=document.createElement('textarea');ta.value=prompt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-  }).finally(()=>alert('✅ Pedido copiado!'));
+  }).finally(()=>alert('✅ Pedido copiado! Cola na conversa de planeamento do Claude.'));
 };
 
 // ── SCREENS ───────────────────────────────────────────────
@@ -550,7 +635,7 @@ function renderHoje(){
   const tmIdx=tomorrow.getDay()===0?6:tomorrow.getDay()-1;
   const tmWD=getWD(getMonday(tomorrow));
   const tmSid=tmWD.shifts?.[DAYS_KEY[tmIdx]]||'folga';
-  const sleepSug=calcSleepSchedule(tmSid);
+  const sleepSug=calcSleepSchedule(tmSid, sid);
   const sleepToday=sleepData[todayKey]||null;
 
   // week strip
