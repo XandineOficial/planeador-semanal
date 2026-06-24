@@ -260,32 +260,38 @@
       </div>
       <div class="space-y-3">
         <input type="hidden" id="shift-modal-idx" value="">
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">ID (Abrev. Ex: M2):</label>
+            <label class="text-[10px] uppercase text-neutral-400 font-bold block mb-1">Código (Ex: M2):</label>
             <input type="text" id="shift-modal-id" placeholder="M2" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
           </div>
           <div>
-            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Nome Curto (Ex: Manhã 2):</label>
+            <label class="text-[10px] uppercase text-neutral-400 font-bold block mb-1">Nome Curto (Ex: Manhã 2):</label>
             <input type="text" id="shift-modal-name" placeholder="Manhã 2" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
           </div>
         </div>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Início:</label>
-            <input type="time" id="shift-modal-start" value="08:00" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+            <label class="text-[10px] uppercase text-neutral-400 font-bold block mb-1">Hora de Início:</label>
+            <input type="time" id="shift-modal-start" value="08:00" oninput="autoCalcShiftEnd()" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
           </div>
           <div>
-            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Carga Horas:</label>
-            <input type="number" step="0.5" id="shift-modal-hours" value="8" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+            <label class="text-[10px] uppercase text-neutral-400 font-bold block mb-1">Carga Horas (Trabalho):</label>
+            <input type="number" step="0.5" id="shift-modal-hours" value="8" oninput="autoCalcShiftEnd()" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[10px] uppercase text-neutral-400 font-bold block mb-1">Saída do Trabalho:</label>
+            <input type="time" id="shift-modal-end" value="16:00" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
           </div>
           <div>
-            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Casa às:</label>
+            <label class="text-[10px] uppercase text-neutral-400 font-bold block mb-1">Chegada a Casa:</label>
             <input type="time" id="shift-modal-home" value="17:00" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
           </div>
         </div>
         <div>
-          <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Descrição / Notas:</label>
+          <label class="text-[10px] uppercase text-neutral-400 font-bold block mb-1">Descrição / Notas:</label>
           <input type="text" id="shift-modal-notes" placeholder="Ex: Turno da manhã prolongado" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
         </div>
         <div>
@@ -364,13 +370,13 @@
 
     // Application Configuration Fallbacks & Static Rules
     const DEFAULT_SHIFTS = [
-      { id: "M", name: "M", start: "07:15", hours: 5.5, home: "14:00", color: "#0A84FF", notes: "Manhã" },
-      { id: "I", name: "I", start: "12:15", hours: 5.5, home: "19:00", color: "#378ADD", notes: "Intermédio" },
-      { id: "T", name: "T", start: "17:15", hours: 5.5, home: "00:15", color: "#D97706", notes: "Tarde" },
-      { id: "IT", name: "IT", start: "12:15", hours: 11, home: "00:15", color: "#7F77DD", notes: "Intermédio + Tarde" },
-      { id: "MIT", name: "MIT", start: "07:15", hours: 15.5, home: "00:15", color: "#EF4444", notes: "Triplo Turno" },
-      { id: "MI", name: "MI", start: "07:15", hours: 10.5, home: "18:30", color: "#EC4899", notes: "Manhã + Intermédio" },
-      { id: "F", name: "Folga", start: "00:00", hours: 0, home: "00:00", color: "#555452", notes: "Dia Livre" }
+      { id: "M", name: "M", start: "07:15", hours: 5.5, end: "12:45", home: "14:00", color: "#0A84FF", notes: "Manhã" },
+      { id: "I", name: "I", start: "12:15", hours: 5.5, end: "17:45", home: "19:00", color: "#378ADD", notes: "Intermédio" },
+      { id: "T", name: "T", start: "17:15", hours: 5.5, end: "22:45", home: "00:15", color: "#D97706", notes: "Tarde" },
+      { id: "IT", name: "IT", start: "12:15", hours: 11, end: "23:15", home: "00:15", color: "#7F77DD", notes: "Intermédio + Tarde" },
+      { id: "MIT", name: "MIT", start: "07:15", hours: 15.5, end: "22:45", home: "00:15", color: "#EF4444", notes: "Triplo Turno" },
+      { id: "MI", name: "MI", start: "07:15", hours: 10.5, end: "17:45", home: "18:30", color: "#EC4899", notes: "Manhã + Intermédio" },
+      { id: "F", name: "Folga", start: "00:00", hours: 0, end: "00:00", home: "00:00", color: "#555452", notes: "Dia Livre" }
     ];
 
     const DEFAULT_FLEX_TASKS = [
@@ -523,6 +529,12 @@
       }
       if (typeof cfg.geminiKey !== "string") {
         cfg.geminiKey = "";
+      }
+      if (typeof cfg.lowWorkloadThreshold !== "number") {
+        cfg.lowWorkloadThreshold = 25;
+      }
+      if (typeof cfg.highWorkloadThreshold !== "number") {
+        cfg.highWorkloadThreshold = 40;
       }
       return cfg;
     }
@@ -712,9 +724,11 @@
     }
 
     function getLoadLabel(hours) {
+      const low = state.config.lowWorkloadThreshold ?? 25;
+      const high = state.config.highWorkloadThreshold ?? 40;
       if (hours === 0) return { label: "Sem Carga", color: "#555452" };
-      if (hours <= 25) return { label: "Carga Baixa", color: "#1D9E75" };
-      if (hours <= 40) return { label: "Carga Normal", color: "#0A84FF" };
+      if (hours <= low) return { label: "Carga Baixa", color: "#1D9E75" };
+      if (hours <= high) return { label: "Carga Normal", color: "#0A84FF" };
       return { label: "Carga Crítica", color: "#EF4444" };
     }
 
@@ -1226,7 +1240,7 @@
         const sh = state.config.shiftTypes.find(s => s.id === shId);
         if (sh) {
           totalHours += sh.hours;
-          if (sh.id !== "F") {
+          if (sh.hours > 0) {
             totalTurns++;
           }
         }
@@ -1357,7 +1371,7 @@
                       <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${s.color}"></span>
                       <span class="text-[10px] font-black">${(!s.name || s.name === 'undefined') ? (s.id || '?') : s.name}</span>
                     </div>
-                    ${s.id !== "F" ? `
+                    ${s.hours > 0 ? `
                       <span class="text-[8px] text-neutral-500 font-extrabold font-mono mt-0.5">${s.hours}h</span>
                     ` : ""}
                   </button>
@@ -1374,13 +1388,24 @@
                 ${selectedActiveShift.notes || (selectedActiveShift.id === "F" ? "Dia de Folga" : `Turno ${(!selectedActiveShift.name || selectedActiveShift.name === 'undefined') ? (selectedActiveShift.id || '?') : selectedActiveShift.name}`)}
               </div>
             </div>
-            ${selectedActiveShift.id !== "F" ? (() => {
+            ${selectedActiveShift.hours > 0 ? (() => {
               const startT = (selectedActiveShift.start && selectedActiveShift.start !== 'undefined') ? selectedActiveShift.start : '';
+              const endT = (selectedActiveShift.end && selectedActiveShift.end !== 'undefined') ? selectedActiveShift.end : calculateExitTime(selectedActiveShift.start, selectedActiveShift.hours || 0);
               const homeT = (selectedActiveShift.home && selectedActiveShift.home !== 'undefined') ? selectedActiveShift.home : '';
-              if (!startT && !homeT) return '';
+              
+              let badgeParts = [];
+              if (startT && endT) {
+                badgeParts.push(`Trabalho: ${startT} - ${endT}`);
+              } else if (startT) {
+                badgeParts.push(`Início: ${startT}`);
+              }
+              if (homeT) {
+                badgeParts.push(`Casa às: ${homeT}`);
+              }
+              if (badgeParts.length === 0) return '';
               return `
                 <span class="text-[9px] text-neutral-400 font-extrabold font-mono bg-black/40 px-2 py-0.5 rounded-md border border-white/[0.02]">
-                  ${startT ? `${startT}h` : ''}${startT && homeT ? ' às ' : ''}${homeT ? `${homeT}h` : ''}
+                  ${badgeParts.join(" | ")}
                 </span>
               `;
             })() : ""}
@@ -1534,7 +1559,7 @@
         // 1. Shift export
         const shiftId = state.weekState.shifts?.[dayKey] || "F";
         const shift = state.config.shiftTypes.find((s) => s.id === shiftId);
-        if (shift && shift.id !== "F") {
+        if (shift && shift.hours > 0) {
           try {
             const [shH, shM] = (shift.start || "08:00").split(":").map(Number);
             const startD = new Date(dayDate);
@@ -1549,7 +1574,8 @@
             icsLines.push(`DTSTART:${formatICSDate(startD)}`);
             icsLines.push(`DTEND:${formatICSDate(endD)}`);
             icsLines.push(`SUMMARY:Turno: ${shift.name} ${shift.notes ? `(${shift.notes})` : ""}`);
-            icsLines.push(`DESCRIPTION:Horário: ${shift.start}h às ${shift.home}h. Adicionado via planeador Alex.`);
+            const endT = shift.end || calculateExitTime(shift.start, shift.hours || 0);
+            icsLines.push(`DESCRIPTION:Horário de Trabalho: ${shift.start} às ${endT}. Chegada a casa: ${shift.home}. Adicionado via planeador Alex.`);
             icsLines.push("END:VEVENT");
           } catch (e) {
             console.warn("Error exporting shift event:", e);
@@ -1638,8 +1664,12 @@
       // Build context parameters
       const shiftScheduleInfo = DAY_KEYS.map((k, i) => {
         const shId = state.weekState.shifts?.[k] || "F";
-        const shObj = state.config.shiftTypes.find(s => s.id === shId) || { name: "Folga", start: "00:00", hours: 0, home: "00:00" };
-        return `${DAYS_PT[i]} (${k}): Turno ${shObj.name} das ${shObj.start} com ${shObj.hours}h de trabalho (Chega a casa às ${shObj.home})`;
+        const shObj = state.config.shiftTypes.find(s => s.id === shId) || { name: "Folga", start: "00:00", hours: 0, end: "00:00", home: "00:00" };
+        const endT = shObj.end || calculateExitTime(shObj.start, shObj.hours || 0);
+        if (shObj.hours === 0) {
+          return `${DAYS_PT[i]} (${k}): DIA LIVRE / FOLGA / FÉRIAS (${shObj.notes || shObj.name || 'Sem Trabalho'}) - Sem horário de trabalho, dia inteiramente livre.`;
+        }
+        return `${DAYS_PT[i]} (${k}): Turno ${shObj.name} das ${shObj.start} às ${endT} com ${shObj.hours}h de trabalho (Chega a casa às ${shObj.home})`;
       }).join("\n");
 
       const pendingBacklog = state.backlog
@@ -2031,6 +2061,28 @@ ${pendingBacklog}
           </div>
         </div>
 
+        <!-- Workload Threshold Settings -->
+        <div class="bg-cardBg p-4 rounded-3xl border border-white/[0.04] space-y-3 shadow-lg">
+          <h3 class="text-xs font-black uppercase text-neutral-400 tracking-wider">Definição de Carga Semanal</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-[9px] uppercase font-bold text-neutral-500 block">Limite Carga Baixa (h)</label>
+              <input type="number" id="low-threshold-input" value="${state.config.lowWorkloadThreshold ?? 25}" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-neutral-100 text-center focus:outline-none focus:border-accent">
+            </div>
+            <div class="space-y-1">
+              <label class="text-[9px] uppercase font-bold text-neutral-500 block">Limite Carga Normal (h)</label>
+              <input type="number" id="high-threshold-input" value="${state.config.highWorkloadThreshold ?? 40}" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-neutral-100 text-center focus:outline-none focus:border-accent">
+            </div>
+          </div>
+          <button onclick="saveWorkloadThresholds()" class="w-full py-2 bg-accent hover:bg-accentHover text-white text-xs font-extrabold rounded-xl transition shadow-md">Salvar Limites de Carga</button>
+          <p class="text-[9px] text-neutral-500 leading-normal">
+            Define as horas de trabalho semanais que categorizam a tua semana:<br>
+            · Até <span class="font-bold text-emerald-400">${state.config.lowWorkloadThreshold ?? 25}h</span>: Carga Baixa.<br>
+            · Até <span class="font-bold text-blue-400">${state.config.highWorkloadThreshold ?? 40}h</span>: Carga Normal.<br>
+            · Acima disso: <span class="font-bold text-red-400">Carga Crítica</span>.
+          </p>
+        </div>
+
         <!-- Shift Types Config list -->
         <div class="space-y-3">
           <div class="flex justify-between items-center">
@@ -2044,12 +2096,14 @@ ${pendingBacklog}
               const sColor = (!sh.color || sh.color === 'undefined') ? '#0A84FF' : sh.color;
               
               const sStart = (sh.start && sh.start !== 'undefined') ? sh.start : '';
+              const sEnd = (sh.end && sh.end !== 'undefined') ? sh.end : calculateExitTime(sh.start, sh.hours || 0);
               const sHome = (sh.home && sh.home !== 'undefined') ? sh.home : '';
               const sHours = (sh.hours !== undefined && sh.hours !== null && String(sh.hours) !== 'undefined') ? `${sh.hours}h` : '';
 
               let infoParts = [];
               if (sStart) infoParts.push(`Início: ${sStart}`);
               if (sHours) infoParts.push(`Carga: ${sHours}`);
+              if (sEnd) infoParts.push(`Saída: ${sEnd}`);
               if (sHome) infoParts.push(`Volta: ${sHome}`);
               const infoText = infoParts.join(" · ") || "Sem horários definidos";
 
@@ -2108,6 +2162,20 @@ ${pendingBacklog}
       showToast("🔑 Chave Gemini API atualizada com sucesso!");
     };
 
+    window.saveWorkloadThresholds = async function() {
+      const lowInput = parseInt($("low-threshold-input").value, 10);
+      const highInput = parseInt($("high-threshold-input").value, 10);
+      if (isNaN(lowInput) || isNaN(highInput) || lowInput < 0 || highInput < lowInput) {
+        alert("Por favor insira limites válidos (o limite baixo deve ser menor que o limite normal).");
+        return;
+      }
+      state.config.lowWorkloadThreshold = lowInput;
+      state.config.highWorkloadThreshold = highInput;
+      await saveCloudConfig();
+      renderActiveTab();
+      showToast("📈 Limites de carga de trabalho atualizados!");
+    };
+
     // Shifts CRUD Modal Triggers
     window.setShiftModalColor = function(color) {
       $("shift-modal-color").value = color;
@@ -2122,6 +2190,31 @@ ${pendingBacklog}
       });
     };
 
+    // Helper for calculating shift end time from start time and hours
+    function calculateExitTime(startStr, hoursNum) {
+      if (!startStr) return "";
+      const parts = startStr.split(":");
+      if (parts.length !== 2) return "";
+      const hrs = parseInt(parts[0], 10);
+      const mins = parseInt(parts[1], 10);
+      
+      const totalMins = hrs * 60 + mins + Math.round(hoursNum * 60);
+      const finalHrs = Math.floor(totalMins / 60) % 24;
+      const finalMins = totalMins % 60;
+      
+      const hPad = String(finalHrs).padStart(2, "0");
+      const mPad = String(finalMins).padStart(2, "0");
+      return `${hPad}:${mPad}`;
+    }
+
+    window.autoCalcShiftEnd = function() {
+      const start = $("shift-modal-start").value;
+      const hours = Number($("shift-modal-hours").value) || 0;
+      if (start) {
+        $("shift-modal-end").value = calculateExitTime(start, hours);
+      }
+    };
+
     window.closeShiftConfigModal = function() {
       $("shift-config-modal").classList.add("hidden");
     };
@@ -2134,6 +2227,7 @@ ${pendingBacklog}
       $("shift-modal-name").value = "";
       $("shift-modal-start").value = "08:00";
       $("shift-modal-hours").value = "8";
+      $("shift-modal-end").value = "16:00";
       $("shift-modal-home").value = "17:00";
       $("shift-modal-notes").value = "";
       setShiftModalColor("#0A84FF");
@@ -2151,6 +2245,7 @@ ${pendingBacklog}
       $("shift-modal-name").value = sh.name || "";
       $("shift-modal-start").value = sh.start || "08:00";
       $("shift-modal-hours").value = sh.hours ?? "8";
+      $("shift-modal-end").value = sh.end || calculateExitTime(sh.start || "08:00", sh.hours ?? 8);
       $("shift-modal-home").value = sh.home || "17:00";
       $("shift-modal-notes").value = sh.notes || "";
       setShiftModalColor(sh.color || "#0A84FF");
@@ -2163,6 +2258,7 @@ ${pendingBacklog}
       const name = $("shift-modal-name").value.trim();
       const start = $("shift-modal-start").value.trim();
       const hours = Number($("shift-modal-hours").value);
+      const end = $("shift-modal-end").value.trim();
       const home = $("shift-modal-home").value.trim();
       const notes = $("shift-modal-notes").value.trim();
       const color = $("shift-modal-color").value;
@@ -2178,13 +2274,14 @@ ${pendingBacklog}
           alert("Já existe um turno com este ID.");
           return;
         }
-        state.config.shiftTypes.push({ id, name, start, hours, home, notes, color });
+        state.config.shiftTypes.push({ id, name, start, hours, end, home, notes, color });
       } else {
         const idx = parseInt(idxStr, 10);
         if (state.config.shiftTypes[idx]) {
           state.config.shiftTypes[idx].name = name;
           state.config.shiftTypes[idx].start = start;
           state.config.shiftTypes[idx].hours = hours;
+          state.config.shiftTypes[idx].end = end;
           state.config.shiftTypes[idx].home = home;
           state.config.shiftTypes[idx].notes = notes;
           state.config.shiftTypes[idx].color = color;
