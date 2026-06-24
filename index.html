@@ -1,913 +1,2289 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Planeador</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --bg:#0f0f0e;--bg2:#1a1a18;--bg3:#222220;--bg4:#2a2a28;
-  --text:#f0ede8;--text2:#9b9896;--text3:#6b6866;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
-  --green:#1D9E75;--green-dim:#0a2e1e;--green-text:#5DCAA5;
-  --amber:#D97706;--amber-dim:#2e1e00;--amber-text:#EF9F27;
-  --blue:#378ADD;--purple:#7F77DD;--red:#E24B4A;
-  --coral:#D85A30;
-  --radius:10px;--radius-lg:16px;--radius-xl:20px;
-}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;justify-content:center;}
-.app{width:100%;max-width:430px;background:var(--bg);min-height:100vh;display:flex;flex-direction:column;}
-
-/* top bar */
-.top-bar{padding:1rem 1rem 0.75rem;display:flex;align-items:center;justify-content:space-between;}
-.top-bar h1{font-size:18px;font-weight:700;letter-spacing:-0.3px;}
-.sync-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--bg2);border-radius:20px;font-size:11px;color:var(--text3);}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);}
-.sync-dot.ok{background:var(--green);}
-.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
-
-/* bottom nav */
-.bottom-nav{display:flex;border-top:0.5px solid var(--border);background:var(--bg);padding:8px 0 max(8px,env(safe-area-inset-bottom));}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;background:none;border:none;color:var(--text3);font-size:10px;font-weight:500;transition:color 0.15s;}
-.nav-item.active{color:var(--green);}
-.nav-item i{font-size:22px;}
-
-.content{flex:1;overflow-y:auto;}
-.screen{display:none;padding-bottom:1rem;}
-.screen.active{display:block;}
-
-/* ── HOJE ── */
-.hero{padding:0.5rem 1rem 1rem;}
-.hero-date{font-size:12px;color:var(--text3);font-weight:500;letter-spacing:0.04em;text-transform:uppercase;}
-.hero-name{font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-top:2px;}
-.hero-shift{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.02em;}
-
-/* agenda */
-.agenda-header{display:flex;align-items:center;justify-content:space-between;padding:0 1rem;margin-bottom:8px;}
-.agenda-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;}
-.agenda-progress{font-size:12px;color:var(--text3);}
-
-.block-card{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;padding:11px 1rem;border-left:3px solid transparent;background:var(--bg2);margin:0 0 2px;}
-.block-card:first-child{border-radius:var(--radius) var(--radius) 0 0;}
-.block-card:last-child{border-radius:0 0 var(--radius) var(--radius);}
-.block-card:only-child{border-radius:var(--radius);}
-.block-card.work{border-left-color:var(--blue);}
-.block-card.activity{border-left-color:var(--green);}
-.block-card.rest{border-left-color:#555452;}
-.block-card.gaming{border-left-color:var(--purple);}
-.block-card.sleep{border-left-color:#6B4EDB;}
-.bc-time{font-size:12px;color:var(--text3);font-weight:600;}
-.bc-title{font-size:14px;color:var(--text);font-weight:500;line-height:1.3;}
-.bc-title.done{text-decoration:line-through;color:var(--text3);}
-.bc-sub{font-size:11px;color:var(--text3);margin-top:1px;}
-.check{width:26px;height:26px;border:1.5px solid var(--border2);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;background:none;flex-shrink:0;transition:all 0.15s;}
-.check.done{background:var(--green);border-color:var(--green);}
-.check i{font-size:14px;color:var(--text3);}
-.check.done i{color:#fff;}
-
-.no-plan{padding:2.5rem 1rem;text-align:center;}
-.no-plan i{font-size:40px;color:var(--text3);opacity:0.3;}
-.no-plan p{font-size:13px;color:var(--text3);margin-top:10px;line-height:1.6;}
-
-/* divider */
-.section-sep{height:0.5px;background:var(--border);margin:1.25rem 0;}
-
-/* cards pequenos */
-.mini-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 1rem;margin-bottom:1rem;}
-.mini-card{background:var(--bg2);border-radius:var(--radius-lg);padding:12px 14px;cursor:pointer;transition:background 0.15s;}
-.mini-card:active{background:var(--bg3);}
-.mc-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
-.mc-value{font-size:15px;font-weight:700;margin-top:4px;color:var(--text);}
-.mc-sub{font-size:11px;color:var(--text3);margin-top:2px;}
-
-/* energy */
-.energy-row{display:flex;gap:6px;padding:0 1rem;margin-bottom:1rem;}
-.e-btn{flex:1;padding:9px 0;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:13px;cursor:pointer;background:var(--bg2);color:var(--text3);text-align:center;transition:all 0.15s;font-weight:500;}
-.e-btn.sel{background:var(--green-dim);border-color:var(--green);color:var(--green-text);}
-
-/* week strip */
-.week-strip{display:flex;gap:6px;padding:0 1rem;margin-bottom:1rem;overflow-x:auto;}
-.week-strip::-webkit-scrollbar{display:none;}
-.ws-day{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 9px;border-radius:var(--radius);background:var(--bg2);min-width:42px;}
-.ws-day.today{background:var(--green-dim);outline:1.5px solid var(--green);}
-.ws-name{font-size:10px;color:var(--text3);font-weight:600;}
-.ws-num{font-size:15px;font-weight:800;color:var(--text);}
-.ws-dot{width:7px;height:7px;border-radius:50%;margin-top:1px;}
-.ws-day.today .ws-name{color:var(--green-text);}
-.ws-day.today .ws-num{color:var(--green-text);}
-
-/* next day */
-.next-card{margin:0 1rem 1rem;background:var(--bg2);border-radius:var(--radius-lg);padding:14px 16px;}
-.next-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;}
-.next-shift{font-size:15px;font-weight:700;margin-top:5px;}
-.next-sleep{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:13px;color:var(--text2);}
-.next-sleep strong{color:var(--text);}
-.next-note{font-size:11px;color:var(--text3);margin-top:5px;}
-
-/* nota */
-.note-bar{margin:0 1rem 1rem;background:var(--bg2);border-radius:var(--radius-lg);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
-.note-text{font-size:13px;color:var(--text2);line-height:1.5;flex:1;}
-.note-add{font-size:12px;color:var(--text3);}
-
-/* ── SEMANA ── */
-.week-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 1rem 8px;}
-.nav-arrow{background:var(--bg2);border:none;border-radius:var(--radius);width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);}
-.week-center{text-align:center;}
-.week-label{font-size:15px;font-weight:700;}
-.week-sub{font-size:11px;color:var(--text3);margin-top:2px;}
-.today-pill{display:block;margin:5px auto 0;font-size:11px;padding:3px 12px;background:var(--bg3);border:none;border-radius:20px;cursor:pointer;color:var(--text3);}
-
-.week-tabs{display:flex;border-bottom:0.5px solid var(--border);margin-bottom:0;}
-.week-tab{flex:1;padding:11px 0;font-size:12px;font-weight:600;text-align:center;color:var(--text3);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;transition:all 0.15s;}
-.week-tab.active{color:var(--green);border-bottom-color:var(--green);}
-
-.days-grid{padding:0.75rem 1rem 0.5rem;}
-.day-row{display:grid;grid-template-columns:76px 1fr;gap:8px;align-items:center;margin-bottom:8px;}
-.day-info{font-size:13px;color:var(--text3);}
-.day-num{font-size:15px;font-weight:700;color:var(--text);display:block;}
-.day-info.today .day-num,.day-info.today .day-name{color:var(--green);}
-.shift-sel{width:100%;padding:10px 11px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);-webkit-appearance:none;appearance:none;font-weight:500;}
-
-.week-info-pill{margin:0 1rem 1rem;background:var(--bg2);border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--text3);}
-.week-info-pill strong{color:var(--text);}
-
-.btn-primary{display:block;padding:14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-lg);font-size:15px;font-weight:700;cursor:pointer;width:calc(100% - 2rem);margin:0 1rem;transition:opacity 0.15s;}
-.btn-primary:active{opacity:0.85;}
-.btn-ghost{display:block;padding:13px;background:transparent;color:var(--text2);border:1px solid var(--border2);border-radius:var(--radius-lg);font-size:14px;font-weight:600;cursor:pointer;width:calc(100% - 2rem);margin:0.75rem 1rem 0;}
-
-/* plan view */
-.plan-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0.75rem 1rem 0;}
-.stat-card{background:var(--bg2);border-radius:var(--radius);padding:10px 8px;text-align:center;}
-.stat-val{font-size:18px;font-weight:800;color:var(--text);}
-.stat-label{font-size:10px;color:var(--text3);margin-top:2px;font-weight:500;}
-.history-note{margin:0.75rem 1rem 0;background:var(--amber-dim);border-radius:var(--radius);padding:10px 13px;font-size:12px;color:var(--amber-text);}
-.history-note strong{display:block;margin-bottom:2px;font-weight:700;}
-
-.plan-day-head{display:flex;align-items:center;gap:8px;padding:14px 1rem 6px;}
-.pdh-name{font-size:14px;font-weight:700;}
-.pdh-date{font-size:12px;color:var(--text3);}
-.pdh-badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:700;margin-left:auto;}
-.today-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;}
-
-/* ── HISTÓRICO ── */
-.hist-week{background:var(--bg2);border-radius:var(--radius-lg);padding:14px 16px;margin:0 1rem 8px;}
-.hw-header{display:flex;align-items:center;justify-content:space-between;}
-.hw-dates{font-size:13px;font-weight:700;}
-.hw-type{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:700;}
-.hw-stats{display:flex;gap:16px;margin-top:10px;}
-.hw-stat{font-size:12px;color:var(--text3);}
-.hw-stat strong{color:var(--text);display:block;font-size:16px;font-weight:800;}
-.hw-bar{height:4px;background:var(--bg3);border-radius:2px;margin-top:10px;overflow:hidden;}
-.hw-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.3s;}
-.copy-hist-btn{margin:0 1rem 1rem;display:block;padding:13px;background:var(--bg2);color:var(--text2);border:1px solid var(--border2);border-radius:var(--radius-lg);font-size:14px;font-weight:600;cursor:pointer;width:calc(100% - 2rem);text-align:center;}
-
-/* ── CFG ── */
-.cfg-head{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;padding:1rem 1rem 0.5rem;}
-.cfg-section{padding:0 1rem 0.5rem;}
-.cfg-card{background:var(--bg2);border-radius:var(--radius-lg);padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
-.cfg-left{display:flex;align-items:center;gap:10px;}
-.cfg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.cfg-info{}
-.cfg-name{font-size:14px;font-weight:600;}
-.cfg-meta{font-size:12px;color:var(--text3);margin-top:2px;}
-.cfg-actions{display:flex;gap:4px;}
-.icon-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:17px;padding:4px;transition:color 0.15s;}
-.icon-btn:active{color:var(--text);}
-.add-btn{width:100%;padding:11px;background:var(--bg3);border:1px dashed var(--border2);border-radius:var(--radius-lg);font-size:13px;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500;}
-
-/* modal */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:flex-end;justify-content:center;}
-.modal-bg.open{display:flex;}
-.modal{background:var(--bg2);border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:1.5rem 1rem 2rem;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;}
-.modal h3{font-size:17px;font-weight:700;margin-bottom:1rem;}
-.field{margin-bottom:13px;}
-.field label{font-size:12px;color:var(--text3);display:block;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
-.field input,.field select,.field textarea{width:100%;padding:11px 12px;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text);font-weight:500;}
-.field textarea{resize:none;min-height:80px;line-height:1.5;}
-.modal-actions{display:flex;gap:8px;margin-top:16px;}
-.m-cancel{flex:1;padding:12px;background:var(--bg3);border:none;border-radius:var(--radius);font-size:14px;cursor:pointer;color:var(--text2);font-weight:600;}
-.m-save{flex:2;padding:12px;background:var(--green);border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;color:#fff;}
-.color-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:6px;}
-.color-opt{width:36px;height:36px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:border-color 0.15s;}
-.color-opt.sel{border-color:var(--text);}
-.star-row{display:flex;gap:10px;margin-top:6px;}
-.star-btn{font-size:26px;cursor:pointer;opacity:0.25;transition:opacity 0.1s;}
-.star-btn.active{opacity:1;}
-.import-box{width:100%;min-height:130px;padding:11px;font-size:12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text);font-family:monospace;resize:vertical;line-height:1.5;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planeador Alex - Standalone Premium</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tabler Icons Webfont -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <!-- Google Fonts - Inter & JetBrains Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            accent: '#1D9E75',
+            accentHover: '#157e5d',
+            darkBg: '#0f0f0e',
+            cardBg: '#1a1a18',
+            popupBg: '#1f1f1d',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0f0f0e;
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 4px;
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #2c2c2a;
+      border-radius: 2px;
+    }
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  </style>
 </head>
-<body>
-<div class="app">
-  <div class="top-bar">
-    <h1>Planeador</h1>
-    <div class="sync-pill"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">A ligar...</span></div>
+<body class="text-neutral-200 antialiased flex justify-center min-h-screen">
+
+  <!-- Core App Shell Container (Max Width 430px for Premium Mobile Feel) -->
+  <div class="w-full max-w-[430px] min-h-screen bg-darkBg flex flex-col relative pb-[86px] border-x border-white/[0.04] shadow-2xl">
+    
+    <!-- Top Bar Header -->
+    <header class="px-5 py-3.5 flex justify-between items-center bg-darkBg/95 backdrop-blur-md sticky top-0 z-40 border-b border-white/[0.06]">
+      <div class="flex items-center gap-3">
+        <h1 class="text-base font-extrabold tracking-tight text-white">Planeador Alex</h1>
+        <span class="text-[9px] bg-neutral-800 text-neutral-300 px-2.5 py-0.5 rounded-full font-black tracking-wider uppercase">V3.0</span>
+      </div>
+      <div id="connection-badge" class="flex items-center gap-1.5 bg-neutral-900 px-3 py-1 rounded-full border border-neutral-800 text-neutral-500 text-[10px] font-bold uppercase tracking-wider">
+        <i class="ti ti-wifi-off text-xs"></i> <span>A Ligar...</span>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="tab-container" class="flex-1 px-5 py-4 space-y-5">
+      <!-- Dynamic View Injection -->
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-darkBg/90 backdrop-blur-md border-t border-white/[0.06] py-2.5 flex justify-around items-center z-[100] safe-bottom shadow-xl">
+      <button onclick="switchTab('hoje')" id="nav-hoje" class="flex flex-col items-center gap-1 text-[10px] font-extrabold transition-all shrink-0 w-[25%] text-neutral-500 hover:text-neutral-300">
+        <i class="ti ti-calendar-event text-lg"></i>
+        <span>Hoje</span>
+      </button>
+      <button onclick="switchTab('semana')" id="nav-semana" class="flex flex-col items-center gap-1 text-[10px] font-extrabold transition-all shrink-0 w-[25%] text-neutral-500 hover:text-neutral-300">
+        <i class="ti ti-calendar-stats text-lg"></i>
+        <span>Semana</span>
+      </button>
+      <button onclick="switchTab('backlog')" id="nav-backlog" class="flex flex-col items-center gap-1 text-[10px] font-extrabold transition-all relative shrink-0 w-[25%] text-neutral-500 hover:text-neutral-300">
+        <i class="ti ti-layers-subtract text-lg"></i>
+        <span>Backlog</span>
+        <span id="backlog-badge" class="hidden absolute top-0 right-1.5 px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-black rounded-full scale-90">0</span>
+      </button>
+      <button onclick="switchTab('config')" id="nav-config" class="flex flex-col items-center gap-1 text-[10px] font-extrabold transition-all shrink-0 w-[25%] text-neutral-500 hover:text-neutral-300">
+        <i class="ti ti-settings text-lg"></i>
+        <span>Config</span>
+      </button>
+    </nav>
   </div>
-  <div class="content">
-    <div class="screen active" id="screen-hoje"><div id="hoje-content"></div></div>
-    <div class="screen" id="screen-semana">
-      <div class="week-nav">
-        <button class="nav-arrow" onclick="changeWeek(-1)"><i class="ti ti-chevron-left"></i></button>
-        <div class="week-center">
-          <div class="week-label" id="wlabel">—</div>
-          <div class="week-sub" id="wsub">—</div>
-          <button class="today-pill" onclick="goToday()">Esta semana</button>
-        </div>
-        <button class="nav-arrow" onclick="changeWeek(1)"><i class="ti ti-chevron-right"></i></button>
-      </div>
-      <div class="week-tabs">
-        <button class="week-tab active" id="wt-turnos" onclick="switchWeekTab('turnos')">Turnos</button>
-        <button class="week-tab" id="wt-plano" onclick="switchWeekTab('plano')">Plano</button>
-      </div>
-      <div id="wt-pane-turnos">
-        <div class="days-grid" id="days-grid"></div>
-        <div class="week-info-pill" id="week-info"></div>
-        <div style="height:0.75rem;"></div>
-        <button class="btn-primary" onclick="copyPrompt()">📋 Copiar pedido para o Claude</button>
-        <button class="btn-ghost" onclick="switchWeekTab('plano')">Ver plano →</button>
-        <div style="height:1rem;"></div>
-      </div>
-      <div id="wt-pane-plano" style="display:none;">
-        <div id="plan-area"><div class="no-plan"><i class="ti ti-calendar-off"></i><p>Sem plano ainda.<br>Copia o pedido, cola no Claude,<br>depois importa o JSON aqui.</p></div></div>
-        <div style="padding:0.75rem 1rem;border-top:0.5px solid var(--border);">
-          <button class="btn-primary" onclick="openModal('import')">📥 Importar plano do Claude</button>
-        </div>
+
+  <!-- Global Loader Overlay for AI Generation -->
+  <div id="ai-loader" class="hidden fixed inset-0 bg-black/95 flex flex-col items-center justify-center text-center p-6 z-[200]">
+    <div class="relative mb-6 flex items-center justify-center">
+      <div class="absolute w-28 h-28 bg-accent/10 rounded-full animate-ping"></div>
+      <div class="absolute w-20 h-20 bg-accent/20 rounded-full animate-pulse"></div>
+      <div class="w-16 h-16 bg-cardBg border border-white/[0.08] rounded-full flex items-center justify-center shadow-inner relative z-10">
+        <i class="ti ti-sparkles text-2xl text-accent animate-bounce"></i>
       </div>
     </div>
-    <div class="screen" id="screen-hist">
-      <div style="padding:1rem 1rem 0.5rem;display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-size:17px;font-weight:700;">Histórico</span>
+    <h2 class="text-base font-extrabold text-white mb-2">A desenhar o teu plano ideal...</h2>
+    <p id="loader-text" class="text-xs text-neutral-300 max-w-[240px] leading-relaxed mx-auto mb-1">Analisando o teu backlog, turnos e sono ideal...</p>
+    <span class="text-[9px] text-neutral-500 font-bold tracking-widest uppercase">Gemini 3.5 Flash Ativo</span>
+  </div>
+
+  <!-- Global Toast Notification -->
+  <div id="toast" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[300] w-full max-w-xs px-4 pointer-events-none">
+    <div id="toast-text" class="bg-cardBg/95 backdrop-blur-md border border-white/[0.1] py-2.5 px-4 rounded-xl text-xs font-semibold text-white flex items-center justify-center text-center shadow-2xl"></div>
+  </div>
+
+  <!-- Activity Block Detail Modal -->
+  <div id="block-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end justify-center z-[150] px-4" onclick="closeBlockModal()">
+    <div class="bg-cardBg w-full max-w-sm rounded-t-3xl border border-white/[0.08] p-5 space-y-4" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 class="text-sm font-extrabold text-white">Ajustar Atividade</h3>
+          <p class="text-[11px] text-neutral-400">Modifique o progresso ou justifique adiamentos.</p>
+        </div>
+        <button onclick="closeBlockModal()" class="text-neutral-400 hover:text-white"><i class="ti ti-x text-lg"></i></button>
       </div>
-      <button class="copy-hist-btn" onclick="copyHistory()">📋 Copiar histórico para o Claude</button>
-      <div id="hist-list"><div class="no-plan"><i class="ti ti-history"></i><p>Sem semanas anteriores ainda.</p></div></div>
-    </div>
-    <div class="screen" id="screen-cfg">
-      <div style="height:0.25rem;"></div>
-      <div class="cfg-head">Tipos de turno</div>
-      <div class="cfg-section">
-        <div id="shift-types-list"></div>
-        <button class="add-btn" onclick="openModal('shifttype')"><i class="ti ti-plus"></i> Criar tipo de turno</button>
+
+      <!-- Quick status actions -->
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="setBlockStatus('done')" class="py-2.5 px-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+          <i class="ti ti-circle-check text-base"></i> <span>Concluir</span>
+        </button>
+        <button onclick="setBlockStatus('pending')" class="py-2.5 px-1 bg-neutral-800 hover:bg-neutral-750 text-neutral-300 border border-white/[0.04] rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+          <i class="ti ti-refresh text-base"></i> <span>Reabrir</span>
+        </button>
       </div>
-      <div class="cfg-head">Carga semanal</div>
-      <div class="cfg-section">
-        <div class="cfg-card" style="flex-direction:column;align-items:flex-start;gap:10px;">
-          <div style="font-size:12px;color:var(--text3);line-height:1.6;">Define as horas a partir das quais a semana muda de categoria.</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;">
-            <div class="field" style="margin:0;"><label>🟢 Leve até (h)</label><input type="number" id="th-leve" min="1" max="60" step="1"></div>
-            <div class="field" style="margin:0;"><label>🟡 Normal até (h)</label><input type="number" id="th-normal" min="1" max="60" step="1"></div>
-            <div class="field" style="margin:0;"><label>🟠 Pesada até (h)</label><input type="number" id="th-pesada" min="1" max="60" step="1"></div>
-            <div class="field" style="margin:0;"><label>🔴 Acima → Muito pesada</label><input type="number" disabled style="opacity:0.4;" id="th-muito"></div>
+
+      <!-- Justify skip action -->
+      <div class="border-t border-white/[0.04] pt-3 space-y-2">
+        <label class="text-[9px] uppercase text-neutral-400 font-extrabold tracking-wider block">Adiar atividade? Justifique:</label>
+        <div class="flex gap-1.5">
+          <input type="text" id="modal-justification" placeholder="Ex: Cansado, namorada veio, etc..." class="flex-1 bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-accent">
+          <button onclick="setBlockStatus('skipped')" class="bg-amber-600/95 hover:bg-amber-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition">Adiar</button>
+        </div>
+      </div>
+
+      <!-- Advanced Direct Editing Toggle -->
+      <details class="group border-t border-white/[0.04] pt-3">
+        <summary class="list-none flex justify-between items-center text-[10px] text-neutral-400 font-extrabold uppercase tracking-wider cursor-pointer group-open:mb-2">
+          <span>Editar Detalhes Diretamente</span>
+          <i class="ti ti-chevron-down transition-transform group-open:rotate-180"></i>
+        </summary>
+        <div class="space-y-3 mt-2">
+          <div>
+            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Título:</label>
+            <input type="text" id="edit-block-title" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
           </div>
-          <button onclick="saveThresholds()" style="background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;">Guardar</button>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Início:</label>
+              <input type="time" id="edit-block-time" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+            </div>
+            <div>
+              <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Minutos:</label>
+              <input type="number" id="edit-block-dur" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+            </div>
+          </div>
+          <div>
+            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Categoria:</label>
+            <select id="edit-block-type" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+              <option value="activity">Atividade / Ginásio</option>
+              <option value="gaming">Gaming / Stream</option>
+              <option value="work">Trabalho / Hemodiálise</option>
+              <option value="meal">Alimentação / Refeição</option>
+              <option value="sleep">Sono / Descanso</option>
+              <option value="rest">Lazer / Descompressão</option>
+            </select>
+          </div>
+          <div class="flex gap-2 pt-1">
+            <button onclick="saveBlockDirectly()" class="flex-1 py-2 bg-accent hover:bg-accentHover text-white text-xs font-bold rounded-xl transition">Gravar</button>
+            <button onclick="deleteBlockDirectly()" class="py-2 px-3 bg-red-950/20 hover:bg-red-900/30 text-red-400 border border-red-900/30 text-xs font-bold rounded-xl transition"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Log Sleep Modal -->
+  <div id="sleep-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end justify-center z-[150] px-4" onclick="closeSleepModal()">
+    <div class="bg-cardBg w-full max-w-sm rounded-t-3xl border border-white/[0.08] p-5 space-y-4" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 class="text-sm font-extrabold text-white">Registar Sono de Ontem</h3>
+          <p class="text-[11px] text-neutral-400">Guarda a hora a que te deitaste e acordaste.</p>
+        </div>
+        <button onclick="closeSleepModal()" class="text-neutral-400 hover:text-white"><i class="ti ti-x text-lg"></i></button>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[9px] uppercase text-neutral-400 font-extrabold tracking-wider block mb-1">Hora de Deitar:</label>
+          <input type="time" id="sleep-bed-time" value="23:00" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+        </div>
+        <div>
+          <label class="text-[9px] uppercase text-neutral-400 font-extrabold tracking-wider block mb-1">Hora de Acordar:</label>
+          <input type="time" id="sleep-wake-time" value="07:30" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
         </div>
       </div>
-      <div class="cfg-section">
-        <div id="fixed-list"></div>
-        <button class="add-btn" onclick="openModal('fixed')"><i class="ti ti-plus"></i> Adicionar</button>
-      </div>
-      <div class="cfg-head">Tarefas flexíveis</div>
-      <div class="cfg-section">
-        <div id="flex-list"></div>
-        <button class="add-btn" onclick="openModal('flex')"><i class="ti ti-plus"></i> Adicionar</button>
-      </div>
+      <button onclick="saveSleep()" class="w-full py-2.5 bg-accent hover:bg-accentHover text-white text-xs font-bold rounded-xl transition shadow-lg">Salvar Registro</button>
     </div>
   </div>
-  <div class="bottom-nav">
-    <button class="nav-item active" id="nav-hoje" onclick="switchScreen('hoje')"><i class="ti ti-sun"></i>Hoje</button>
-    <button class="nav-item" id="nav-semana" onclick="switchScreen('semana')"><i class="ti ti-calendar-week"></i>Semana</button>
-    <button class="nav-item" id="nav-hist" onclick="switchScreen('hist')"><i class="ti ti-chart-bar"></i>Histórico</button>
-    <button class="nav-item" id="nav-cfg" onclick="switchScreen('cfg')"><i class="ti ti-settings"></i>Config</button>
-  </div>
-</div>
 
-<div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <h3 id="m-title">—</h3>
-    <div id="m-shifttype">
-      <div class="field"><label>Nome</label><input type="text" id="st-name" placeholder="ex: M, IT, Farmácia 4h"></div>
-      <div class="field"><label>Hora de início</label><input type="time" id="st-start" value="07:15"></div>
-      <div class="field"><label>Duração (horas)</label><input type="number" id="st-hours" value="5.5" min="0.5" max="24" step="0.5"></div>
-      <div class="field"><label>Chegada a casa (estimada)</label><input type="time" id="st-home" value="19:00"></div>
-      <div class="field"><label>Cor</label><div class="color-grid" id="color-grid"></div></div>
-      <div class="field"><label>Notas</label><input type="text" id="st-notes" placeholder="opcional"></div>
-    </div>
-    <div id="m-task" style="display:none;">
-      <div class="field"><label>Nome</label><input type="text" id="t-name"></div>
-      <div class="field"><label>Duração (minutos)</label><input type="number" id="t-dur" value="60" min="15" max="300" step="15"></div>
-      <div id="t-flex-extra">
-        <div class="field"><label>Preferência horário</label><select id="t-pref"><option value="manha">Manhã</option><option value="tarde">Tarde/Noite</option><option value="qualquer">Tanto faz</option></select></div>
-        <div class="field"><label>Vezes/semana (ideal)</label><input type="number" id="t-freq" value="2" min="1" max="7"></div>
+  <!-- Add Activity Block Modal -->
+  <div id="add-block-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm flex items-end justify-center z-[150] px-4" onclick="closeAddBlockModal()">
+    <div class="bg-cardBg w-full max-w-sm rounded-t-3xl border border-white/[0.08] p-5 space-y-4" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 class="text-sm font-extrabold text-white">Adicionar Bloco Manual</h3>
+          <p class="text-[11px] text-neutral-400">Insira manualmente uma janela na sua agenda de hoje.</p>
+        </div>
+        <button onclick="closeAddBlockModal()" class="text-neutral-400 hover:text-white"><i class="ti ti-x text-lg"></i></button>
       </div>
-      <div id="t-fixed-extra" style="display:none;">
-        <div class="field"><label>Dia</label><select id="t-day"><option value="0">Segunda</option><option value="1">Terça</option><option value="2">Quarta</option><option value="3">Quinta</option><option value="4">Sexta</option><option value="5">Sábado</option><option value="6">Domingo</option></select></div>
-        <div class="field"><label>Hora</label><input type="time" id="t-time" value="09:00"></div>
+      <div class="space-y-3">
+        <div>
+          <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Título:</label>
+          <input type="text" id="add-block-title" placeholder="Ex: Diário e Café" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Início:</label>
+            <input type="time" id="add-block-time" value="18:00" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+          <div>
+            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Duração (Min):</label>
+            <input type="number" id="add-block-dur" value="30" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+        </div>
+        <div>
+          <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Tipo de Bloco:</label>
+          <select id="add-block-type" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+            <option value="activity">Atividade / Ginásio</option>
+            <option value="gaming">Gaming / Stream</option>
+            <option value="work">Trabalho / Hemodiálise</option>
+            <option value="meal">Alimentação / Refeição</option>
+            <option value="sleep">Sono / Descanso</option>
+            <option value="rest" selected>Lazer / Descompressão</option>
+          </select>
+        </div>
       </div>
-    </div>
-    <div id="m-edit-task" style="display:none;">
-      <div class="field"><label>Nome</label><input type="text" id="et-name"></div>
-      <div class="field"><label>Duração (minutos)</label><input type="number" id="et-dur" min="15" max="300" step="15"></div>
-      <div id="et-flex-extra">
-        <div class="field"><label>Preferência horário</label><select id="et-pref"><option value="manha">Manhã</option><option value="tarde">Tarde/Noite</option><option value="qualquer">Tanto faz</option></select></div>
-        <div class="field"><label>Vezes/semana (ideal)</label><input type="number" id="et-freq" min="1" max="7"></div>
-      </div>
-      <div id="et-fixed-extra" style="display:none;">
-        <div class="field"><label>Dia</label><select id="et-day"><option value="0">Segunda</option><option value="1">Terça</option><option value="2">Quarta</option><option value="3">Quinta</option><option value="4">Sexta</option><option value="5">Sábado</option><option value="6">Domingo</option></select></div>
-        <div class="field"><label>Hora</label><input type="time" id="et-time"></div>
-      </div>
-    </div>
-    <div id="m-sleep" style="display:none;">
-      <div class="field"><label>Deitei às</label><input type="time" id="sl-bed" value="23:00"></div>
-      <div class="field"><label>Acordei às</label><input type="time" id="sl-wake" value="07:00"></div>
-      <div class="field"><label>Qualidade</label><div class="star-row" id="star-row"><span class="star-btn" onclick="setStar(1)">⭐</span><span class="star-btn" onclick="setStar(2)">⭐</span><span class="star-btn" onclick="setStar(3)">⭐</span><span class="star-btn" onclick="setStar(4)">⭐</span><span class="star-btn" onclick="setStar(5)">⭐</span></div></div>
-      <div class="field"><label>Nota</label><input type="text" id="sl-note" placeholder="opcional"></div>
-    </div>
-    <div id="m-import" style="display:none;">
-      <p style="font-size:13px;color:var(--text3);margin-bottom:10px;line-height:1.5;">Cola aqui o JSON gerado pelo Claude:</p>
-      <textarea class="import-box" id="import-json" placeholder='{"weekSummary":{...},"days":[...]}'></textarea>
-    </div>
-    <div id="m-note" style="display:none;">
-      <div class="field"><label>Nota do dia</label><textarea id="note-text" class="field" style="width:100%;padding:11px;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text);min-height:100px;resize:none;" placeholder="ex: não fui ao ginásio, estava mais cansado..."></textarea></div>
-    </div>
-    <div class="modal-actions">
-      <button class="m-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="m-save" onclick="saveModal()">Guardar</button>
+      <button onclick="addBlock()" class="w-full py-2.5 bg-accent hover:bg-accentHover text-white text-xs font-bold rounded-xl transition shadow-lg">Adicionar à Agenda</button>
     </div>
   </div>
-</div>
 
-<script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import{getFirestore,doc,getDoc,setDoc}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const fbApp=initializeApp({apiKey:"AIzaSyB67hGNCNIOHX1TdMZs3SNHn5dNVBRjP_4",authDomain:"planeador-semanal.firebaseapp.com",projectId:"planeador-semanal",storageBucket:"planeador-semanal.firebasestorage.app",messagingSenderId:"460355745741",appId:"1:460355745741:web:b31c60aae0b6cae0e8f684"});
-const db=getFirestore(fbApp);
-const UID='alex';
-const DAYS_PT=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
-const DAYS_KEY=['segunda','terca','quarta','quinta','sexta','sabado','domingo'];
-const MONTHS=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-const MONTHS_SHORT=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-const COLORS=['#1D9E75','#378ADD','#7F77DD','#D4537E','#D85A30','#D97706','#639922','#E24B4A','#888780','#c8c5c0'];
-const DAY_SHORT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-
-function getMonday(d){const c=new Date(d);const day=c.getDay();c.setDate(c.getDate()+(day===0?-6:1-day));c.setHours(0,0,0,0);return c;}
-function wKey(m){return m.toISOString().slice(0,10);}
-function dKey(d){return d.toISOString().slice(0,10);}
-function fmt(d){return`${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;}
-function isToday(d){const t=new Date();return d.getDate()===t.getDate()&&d.getMonth()===t.getMonth()&&d.getFullYear()===t.getFullYear();}
-function timeToMin(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
-function minToTime(m){const mm=((m%1440)+1440)%1440;return`${String(Math.floor(mm/60)).padStart(2,'0')}:${String(mm%60).padStart(2,'0')}`;}
-function durFmt(min){return min>=60?`${(min/60).toFixed(1).replace('.0','')}h`:`${min}min`;}
-
-function setSyncStatus(s){
-  const dot=document.getElementById('sync-dot'),lbl=document.getElementById('sync-label');
-  if(s==='ok'){dot.className='sync-dot ok';lbl.textContent='Sync';}
-  else if(s==='syncing'){dot.className='sync-dot syncing';lbl.textContent='...';}
-  else{dot.className='sync-dot';lbl.textContent='Offline';}
-}
-async function fbSet(path,data){try{setSyncStatus('syncing');await setDoc(doc(db,path),data,{merge:true});setSyncStatus('ok');}catch(e){setSyncStatus('offline');}}
-async function fbGet(path){try{const s=await getDoc(doc(db,path));return s.exists()?s.data():null;}catch(e){setSyncStatus('offline');return null;}}
-
-let curMon=getMonday(new Date());
-let weekData={};let sleepData={};let energyData={};let noteData={};
-let nid=30;let mMode=null;let selColor=COLORS[0];let selStar=0;let editingId=null;let editingType=null;
-
-let thresholds={leve:16,normal:27,pesada:38};
-let shiftTypes=[
-  {id:'st1',name:'M',startTime:'07:15',hours:5.5,homeTime:'14:00',color:'#1D9E75',notes:'Manhã'},
-  {id:'st2',name:'I',startTime:'12:15',hours:5.5,homeTime:'19:00',color:'#378ADD',notes:'Intermédio'},
-  {id:'st3',name:'T',startTime:'17:15',hours:5.5,homeTime:'00:15',color:'#D85A30',notes:'Tarde'},
-  {id:'st4',name:'IT',startTime:'12:15',hours:11,homeTime:'00:15',color:'#7F77DD',notes:'Intermédio+Tarde'},
-  {id:'st5',name:'MIT',startTime:'07:15',hours:15.5,homeTime:'00:15',color:'#E24B4A',notes:'Manhã+Inter+Tarde'},
-  {id:'st6',name:'MI',startTime:'07:15',hours:10.5,homeTime:'18:30',color:'#D4537E',notes:'Manhã+Intermédio'},
-];
-let flexTasks=[
-  {id:10,name:'Ginásio',pref:'manha',freq:3,duration:75},
-  {id:11,name:'Leitura',pref:'manha',freq:4,duration:30},
-  {id:12,name:'Meditação',pref:'manha',freq:5,duration:15},
-  {id:13,name:'Diário',pref:'manha',freq:3,duration:20},
-  {id:14,name:'Gaming',pref:'tarde',freq:3,duration:90},
-  {id:15,name:'Namorada',pref:'tarde',freq:1,duration:180},
-  {id:16,name:'Descanso',pref:'qualquer',freq:3,duration:60},
-  {id:17,name:'Stream',pref:'tarde',freq:1,duration:120},
-];
-let fixedTasks=[];
-
-async function saveConfig(){await fbSet(`users/${UID}/config/main`,{shiftTypes,flexTasks,fixedTasks,nid,thresholds});}
-async function saveWeek(key){const wd=weekData[key];if(!wd)return;await fbSet(`users/${UID}/weeks/${key}`,{shifts:wd.shifts||{},plan:wd.plan||null,checked:wd.checked||{}});}
-async function saveSleep(key,data){await fbSet(`users/${UID}/sleep/${key}`,data);}
-async function saveEnergy(key,val){await fbSet(`users/${UID}/energy/${key}`,{value:val});}
-async function saveNote(key,val){await fbSet(`users/${UID}/notes/${key}`,{text:val});}
-
-async function loadAll(){
-  setSyncStatus('syncing');
-  const cfg=await fbGet(`users/${UID}/config/main`);
-  if(cfg){if(cfg.shiftTypes)shiftTypes=cfg.shiftTypes;if(cfg.flexTasks)flexTasks=cfg.flexTasks;if(cfg.fixedTasks)fixedTasks=cfg.fixedTasks;if(cfg.nid)nid=cfg.nid;if(cfg.thresholds)thresholds=cfg.thresholds;}
-
-  // Carregar semana atual
-  await ensureWeekLoaded(curMon);
-
-  // Carregar últimas 4 semanas para histórico
-  for(let i=1;i<=4;i++){
-    const past=new Date(curMon);past.setDate(past.getDate()-i*7);
-    await ensureWeekLoaded(past);
-  }
-
-  const today=new Date();
-  // Carregar sono dos últimos 7 dias
-  for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);const k=dKey(d);const sl=await fbGet(`users/${UID}/sleep/${k}`);if(sl)sleepData[k]=sl;}
-  const ek=dKey(today);
-  const en=await fbGet(`users/${UID}/energy/${ek}`);if(en)energyData[ek]=en.value;
-  const nt=await fbGet(`users/${UID}/notes/${ek}`);if(nt)noteData[ek]=nt.text;
-  setSyncStatus('ok');
-  renderAll();
-}
-
-async function ensureWeekLoaded(m){
-  const k=wKey(m);
-  if(weekData[k]&&weekData[k]._loaded)return;
-  const data=await fbGet(`users/${UID}/weeks/${k}`);
-  weekData[k]=data?Object.assign({_loaded:true},data):{_loaded:true,shifts:{},plan:null,checked:{}};
-}
-
-function getWD(m){const k=wKey(m);if(!weekData[k])weekData[k]={_loaded:false,shifts:{},plan:null,checked:{}};return weekData[k];}
-function getShift(sid){if(!sid||sid==='folga')return null;return shiftTypes.find(s=>s.id===sid)||null;}
-function getShiftColor(sid){const st=getShift(sid);return st?st.color:'var(--bg3)';}
-function getShiftLabel(sid){const st=getShift(sid);return st?st.name:'Folga';}
-function getShiftHours(sid){const st=getShift(sid);return st?st.hours:0;}
-function weekDays(m){return Array.from({length:7},(_,i)=>{const d=new Date(m);d.setDate(d.getDate()+i);return d;});}
-
-function calcSleepSchedule(sid, prevSid){
-  // Objetivo base: 7h30 de sono. Mínimo absoluto: 7h. Nunca acordar antes das 05h00.
-  const TARGET=450; // 7h30 em minutos
-  const MIN_SLEEP=420; // 7h
-  const EARLIEST_WAKE=300; // 05h00
-
-  // Turno de amanhã — que horas precisa de estar pronto?
-  const nextShift=getShift(sid);
-  // Último turno de hoje (para avaliar recuperação)
-  const prevShift=getShift(prevSid);
-
-  // Determinar se hoje foi noite (T, IT, MIT) — precisa de recuperação
-  const wasNightShift=prevShift&&['T','IT','MIT'].some(n=>prevShift.name===n);
-
-  // Calcular hora de acordar necessária para amanhã
-  let latestWake; // mais tarde que pode acordar
-  if(!nextShift){
-    // Folga amanhã — sem obrigação
-    latestWake = wasNightShift ? 540 : 480; // 09h ou 08h
-  } else {
-    // Precisa de estar pronto para o turno
-    const startMin = timeToMin(nextShift.startTime);
-    const prepTime = 75; // 1h15 para preparar + deslocação
-    latestWake = startMin - prepTime;
-  }
-
-  // Garantir que não acorda demasiado cedo
-  latestWake = Math.max(latestWake, EARLIEST_WAKE);
-
-  // Calcular hora de deitar: wake - TARGET
-  let bedMin = latestWake - TARGET;
-
-  // Se hoje foi turno noturno (chega ~00h15), deitar não pode ser antes de 01h00
-  if(wasNightShift){
-    bedMin = Math.max(bedMin, 60); // mínimo 01h00
-    // E recalcular wake com esse bed + TARGET
-    latestWake = bedMin + TARGET;
-  }
-
-  // Se turno de hoje chegou tarde (T/IT/MIT), mesma lógica mesmo sem nextShift
-  if(!nextShift && wasNightShift){
-    bedMin = 60; // 01h00
-    latestWake = bedMin + TARGET; // 08h30
-  }
-
-  // Verificar se a hora de acordar é realista para o turno seguinte
-  const wakeTime = minToTime(((latestWake % 1440) + 1440) % 1440);
-  const bedTime = minToTime(((bedMin % 1440) + 1440) % 1440);
-
-  let note = '';
-  if(wasNightShift){
-    note = `Turno noturno hoje → recuperar. Cama ${bedTime}, acordar ${wakeTime}`;
-  } else if(!nextShift){
-    note = `Folga amanhã. Dormir bem — cama ${bedTime}, acordar ${wakeTime}`;
-  } else {
-    note = `${nextShift.name} às ${nextShift.startTime} → cama ${bedTime}, acordar ${wakeTime}`;
-  }
-
-  return{bed:bedTime, wake:wakeTime, note};
-}
-
-// ── HISTÓRICO ─────────────────────────────────────────────
-function buildHistorySummary(){
-  const keys=Object.keys(weekData).sort();
-  const cur=wKey(curMon);
-  const past=keys.filter(k=>k<cur&&weekData[k]._loaded).slice(-4);
-  if(!past.length)return'Sem histórico anterior.';
-  return past.map(k=>{
-    const wd=weekData[k];let h=0;DAYS_KEY.forEach(d=>h+=getShiftHours(wd.shifts?.[d]));
-    const total=Object.keys(wd.checked||{}).length;
-    const done=Object.values(wd.checked||{}).filter(Boolean).length;
-    const pct=total>0?Math.round(done/total*100):0;
-    return`Semana ${k}: ${Math.round(h)}h trabalho, ${done}/${total} atividades (${pct}%)`;
-  }).join('\n');
-}
-
-window.copyHistory=function(){
-  const text=buildHistorySummary();
-  const full=`HISTÓRICO DE SEMANAS:\n${text}`;
-  navigator.clipboard.writeText(full).catch(()=>{
-    const ta=document.createElement('textarea');ta.value=full;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-  }).finally(()=>alert('✅ Histórico copiado!'));
-};
-
-function getWeekType(h){return h<=thresholds.leve?'🟢 Leve':h<=thresholds.normal?'🟡 Normal':h<=thresholds.pesada?'🟠 Pesada':'🔴 Muito pesada';}
-function getWeekTypeText(h){return h<=thresholds.leve?'leve':h<=thresholds.normal?'normal':h<=thresholds.pesada?'pesada':'muito pesada';}
-window.saveThresholds=async function(){
-  const l=parseInt(document.getElementById('th-leve').value);
-  const n=parseInt(document.getElementById('th-normal').value);
-  const p=parseInt(document.getElementById('th-pesada').value);
-  if(!l||!n||!p||l>=n||n>=p){alert('Valores inválidos. Leve < Normal < Pesada.');return;}
-  thresholds={leve:l,normal:n,pesada:p};
-  document.getElementById('th-muito').value=p+1+'+'
-  await saveConfig();
-  alert('✅ Critérios guardados!');
-  updateInfo();
-};
-function renderThresholds(){
-  document.getElementById('th-leve').value=thresholds.leve;
-  document.getElementById('th-normal').value=thresholds.normal;
-  document.getElementById('th-pesada').value=thresholds.pesada;
-  document.getElementById('th-muito').value=(thresholds.pesada+1)+'+';
-}
-window.copyPrompt=function(){
-  const wd=getWD(curMon);const days=weekDays(curMon);
-  let totalH=0;DAYS_KEY.forEach(k=>totalH+=getShiftHours(wd.shifts?.[k]));
-  const wt=getWeekTypeText(totalH);
-  const sDesc=DAYS_KEY.map((k,i)=>{
-    const sid=wd.shifts?.[k]||'folga';const st=getShift(sid);
-    return`${DAYS_PT[i]} ${days[i].getDate()}/${days[i].getMonth()+1}: ${st?`${st.name} (${st.startTime}, ${st.hours}h, chega ~${st.homeTime})`:'Folga'}`;
-  }).join('\n');
-  const fDesc=fixedTasks.length?fixedTasks.map(t=>`- ${t.name}: ${DAYS_PT[t.dayIdx]} às ${t.time}, ${t.duration}min`).join('\n'):'Nenhuma';
-  const flDesc=flexTasks.map(t=>`- ${t.name}: ${t.freq}×/semana, ${t.duration}min, preferência ${t.pref==='manha'?'manhã':t.pref==='tarde'?'tarde/noite':'qualquer'}`).join('\n');
-  const energy=energyData[dKey(new Date())]||'normal';
-  const todayNote=noteData[dKey(new Date())]||'';
-  const hist=buildHistorySummary();
-
-  // sono recente com análise
-  const sleepEntries=Object.entries(sleepData).slice(-7);
-  const sleepLines=sleepEntries.map(([k,v])=>{
-    let b=timeToMin(v.bed),w=timeToMin(v.wake);if(w<=b)w+=1440;
-    const h=Math.round((w-b)/60*10)/10;
-    return`${k}: ${h}h (qualidade ${v.stars}/5${v.note?', '+v.note:''})`;
-  }).join('\n')||'Sem dados de sono registados';
-
-  // média de sono
-  let avgSleep='';
-  if(sleepEntries.length>0){
-    const total=sleepEntries.reduce((acc,[,v])=>{let b=timeToMin(v.bed),w=timeToMin(v.wake);if(w<=b)w+=1440;return acc+(w-b)/60;},0);
-    avgSleep=`Média: ${Math.round(total/sleepEntries.length*10)/10}h/noite nos últimos ${sleepEntries.length} dias`;
-  }
-
-  const prompt=`DADOS DA SEMANA PARA PLANEAMENTO:
-
-TURNOS DA SEMANA:
-${sDesc}
-
-CARGA TOTAL: ${Math.round(totalH*10)/10}h — semana ${wt}
-(critérios: leve <${thresholds.leve}h, normal <${thresholds.normal}h, pesada <${thresholds.pesada}h)
-
-ENERGIA HOJE: ${energy}${todayNote?`\nNOTA DO DIA: ${todayNote}`:''}
-
-HISTÓRICO RECENTE:
-${hist}
-
-SONO RECENTE:
-${sleepLines}
-${avgSleep}
-
-REGRAS DE SONO (obrigatórias):
-- Objetivo: 7h30 de sono por noite. Mínimo absoluto: 7h.
-- Nunca sugerir acordar antes das 05h00.
-- Após turno T, IT ou MIT (chega ~00h15): deitar mínimo 01h00, acordar com 7h30 → ~08h30. Nunca acordar antes das 07h00.
-- Após turno M ou I: deitar entre 22h30–23h30, acordar às 06h–07h conforme turno seguinte.
-- Após turno MI (chega ~19h): deitar 22h30–23h00, acordar 06h00–07h00.
-- Dia de folga sem turno seguinte cedo: deixar dormir até 07h00–08h00 para recuperação.
-- Se turno seguinte é M (07h15): acordar 06h00 máximo → deitar 22h00–22h30.
-- NUNCA calcular hora de acordar recuando desde o turno se isso der antes das 05h00.
-- Priorizar recuperação de sono em semanas pesadas.
-
-TAREFAS FIXAS:
-${fDesc}
-
-TAREFAS FLEXÍVEIS:
-${flDesc}`;
-
-  navigator.clipboard.writeText(prompt).catch(()=>{
-    const ta=document.createElement('textarea');ta.value=prompt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-  }).finally(()=>alert('✅ Pedido copiado! Cola na conversa de planeamento do Claude.'));
-};
-
-// ── SCREENS ───────────────────────────────────────────────
-window.switchScreen=function(s){
-  ['hoje','semana','hist','cfg'].forEach(x=>{
-    document.getElementById(`screen-${x}`).classList.toggle('active',x===s);
-    document.getElementById(`nav-${x}`).classList.toggle('active',x===s);
-  });
-  if(s==='hoje')renderHoje();
-  if(s==='semana'){updateWeekHeader();renderDays();}
-  if(s==='hist')renderHistory();
-  if(s==='cfg'){renderShiftTypes();renderTasks();renderThresholds();}
-};
-
-// ── HOJE ──────────────────────────────────────────────────
-function renderHoje(){
-  const now=new Date();const todayKey=dKey(now);
-  const mon=getMonday(now);const wd=getWD(mon);
-  const dayIdx=now.getDay()===0?6:now.getDay()-1;
-  const dayKey=DAYS_KEY[dayIdx];
-  const sid=wd.shifts?.[dayKey]||'folga';const shift=getShift(sid);
-  const todayPlan=wd.plan?.days?.find(d=>d.day===dayKey);
-  const checked=wd.checked||{};
-  const energy=energyData[todayKey]||null;
-  const todayNote=noteData[todayKey]||null;
-  const tomorrow=new Date(now);tomorrow.setDate(tomorrow.getDate()+1);
-  const tmIdx=tomorrow.getDay()===0?6:tomorrow.getDay()-1;
-  const tmWD=getWD(getMonday(tomorrow));
-  const tmSid=tmWD.shifts?.[DAYS_KEY[tmIdx]]||'folga';
-  const sleepSug=calcSleepSchedule(tmSid, sid);
-  const sleepToday=sleepData[todayKey]||null;
-
-  // week strip
-  const wMon=getMonday(now);const wdCur=getWD(wMon);
-  const strip=weekDays(wMon).map((d,i)=>{
-    const k=DAYS_KEY[i];const st=getShift(wdCur.shifts?.[k]);const tod=isToday(d);
-    return`<div class="ws-day${tod?' today':''}"><span class="ws-name">${DAY_SHORT[d.getDay()]}</span><span class="ws-num">${d.getDate()}</span><div class="ws-dot" style="background:${st?st.color:'var(--bg4)'}"></div></div>`;
-  }).join('');
-
-  // progresso agenda
-  let totalBlocks=0,doneBlocks=0;
-  if(todayPlan?.blocks){
-    todayPlan.blocks.forEach(b=>{
-      const k=`${wKey(mon)}-${dayKey}-${b.time}-${b.title}`;
-      totalBlocks++;if(checked[k])doneBlocks++;
-    });
-  }
-
-  let html=`<div class="hero">
-    <div class="hero-date">${DAY_SHORT[now.getDay()]} · ${fmt(now)} · ${now.getFullYear()}</div>
-    <div class="hero-name">Olá, Alex</div>
-    ${shift?`<span class="hero-shift" style="background:${shift.color}22;color:${shift.color};">${shift.name} &nbsp;·&nbsp; ${shift.startTime} &nbsp;·&nbsp; ${shift.hours}h</span>`:`<span class="hero-shift" style="background:var(--bg2);color:var(--text3);">Folga</span>`}
-  </div>`;
-
-  // agenda
-  if(todayPlan?.blocks?.length){
-    html+=`<div class="agenda-header"><span class="agenda-title">Agenda de hoje</span>${totalBlocks>0?`<span class="agenda-progress">${doneBlocks}/${totalBlocks}</span>`:''}</div>
-    <div style="padding:0 1rem;margin-bottom:1rem;">`;
-    todayPlan.blocks.forEach((b,bi)=>{
-      const k=`${wKey(mon)}-${dayKey}-${b.time}-${b.title}`;
-      const done=checked[k]||false;
-      const safeId='bt_'+k.replace(/[^a-z0-9]/gi,'_');
-      const isFirst=bi===0,isLast=bi===todayPlan.blocks.length-1,isOnly=todayPlan.blocks.length===1;
-      const radius=isOnly?'border-radius:var(--radius);':isFirst?'border-radius:var(--radius) var(--radius) 0 0;':isLast?'border-radius:0 0 var(--radius) var(--radius);':'';
-      html+=`<div class="block-card ${b.type}" style="${radius}"><span class="bc-time">${b.time}</span><div><div class="bc-title${done?' done':''}" id="${safeId}">${b.title}</div><div class="bc-sub">${durFmt(b.duration)}</div></div><button class="check${done?' done':''}" onclick="toggleCheckHoje('${k}','${safeId}',this,'${wKey(mon)}')"><i class="ti ti-check"></i></button></div>`;
-    });
-    html+=`</div>`;
-  }else{
-    html+=`<div class="no-plan"><i class="ti ti-calendar-off"></i><p>Sem plano para hoje.<br>Vai a <strong>Semana</strong>, copia o pedido,<br>cola no Claude e importa o JSON.</p></div>`;
-  }
-
-  html+=`<div class="section-sep"></div>
-  <div class="week-strip">${strip}</div>
-  <div style="padding:0 1rem;margin-bottom:6px;"><span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;">Energia hoje</span></div>
-  <div class="energy-row">
-    <button class="e-btn${energy==='baixa'?' sel':''}" onclick="setEnergy('baixa','${todayKey}')">😴 Baixa</button>
-    <button class="e-btn${energy==='normal'?' sel':''}" onclick="setEnergy('normal','${todayKey}')">👍 Normal</button>
-    <button class="e-btn${energy==='boa'?' sel':''}" onclick="setEnergy('boa','${todayKey}')">⚡ Boa</button>
-  </div>
-  <div class="mini-cards">
-    <div class="mini-card" onclick="openModal('sleep','${todayKey}')">
-      <div class="mc-label">Sono</div>
-      ${sleepToday?`<div class="mc-value">${(()=>{let b=timeToMin(sleepToday.bed),w=timeToMin(sleepToday.wake);if(w<=b)w+=1440;return Math.round((w-b)/60*10)/10;})()}h</div><div class="mc-sub">${'⭐'.repeat(sleepToday.stars)} · ${sleepToday.bed}→${sleepToday.wake}</div>`:`<div class="mc-value" style="font-size:13px;color:var(--text3);">Registar</div><div class="mc-sub">Toca para adicionar</div>`}
-    </div>
-    <div class="mini-card" onclick="openModal('note','${todayKey}')">
-      <div class="mc-label">Nota</div>
-      ${todayNote?`<div class="mc-value" style="font-size:12px;font-weight:500;line-height:1.4;">${todayNote.slice(0,40)}${todayNote.length>40?'…':''}</div>`:`<div class="mc-value" style="font-size:13px;color:var(--text3);">Adicionar</div>`}
+  <!-- Shift Config Modal -->
+  <div id="shift-config-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm flex items-end justify-center z-[150] px-4" onclick="closeShiftConfigModal()">
+    <div class="bg-cardBg w-full max-w-sm rounded-t-3xl border border-white/[0.08] p-5 space-y-4" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 id="shift-modal-title" class="text-sm font-extrabold text-white">Adicionar Turno</h3>
+          <p class="text-[11px] text-neutral-400">Insira as configurações e horários do turno de trabalho.</p>
+        </div>
+        <button onclick="closeShiftConfigModal()" class="text-neutral-400 hover:text-white"><i class="ti ti-x text-lg"></i></button>
+      </div>
+      <div class="space-y-3">
+        <input type="hidden" id="shift-modal-idx" value="">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">ID (Abrev. Ex: M2):</label>
+            <input type="text" id="shift-modal-id" placeholder="M2" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+          <div>
+            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Nome Curto (Ex: Manhã 2):</label>
+            <input type="text" id="shift-modal-name" placeholder="Manhã 2" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Início:</label>
+            <input type="time" id="shift-modal-start" value="08:00" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+          <div>
+            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Carga Horas:</label>
+            <input type="number" step="0.5" id="shift-modal-hours" value="8" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+          <div>
+            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Casa às:</label>
+            <input type="time" id="shift-modal-home" value="17:00" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+        </div>
+        <div>
+          <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Descrição / Notas:</label>
+          <input type="text" id="shift-modal-notes" placeholder="Ex: Turno da manhã prolongado" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+        </div>
+        <div>
+          <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Cor do Turno:</label>
+          <div class="flex flex-wrap gap-2 mt-1">
+            <button type="button" onclick="setShiftModalColor('#FF9F0A')" class="w-6 h-6 rounded-full border border-white/20 hover:scale-110 transition bg-[#FF9F0A] shift-color-preset" data-color="#FF9F0A"></button>
+            <button type="button" onclick="setShiftModalColor('#30D158')" class="w-6 h-6 rounded-full border border-white/20 hover:scale-110 transition bg-[#30D158] shift-color-preset" data-color="#30D158"></button>
+            <button type="button" onclick="setShiftModalColor('#BF5AF2')" class="w-6 h-6 rounded-full border border-white/20 hover:scale-110 transition bg-[#BF5AF2] shift-color-preset" data-color="#BF5AF2"></button>
+            <button type="button" onclick="setShiftModalColor('#0A84FF')" class="w-6 h-6 rounded-full border border-white/20 hover:scale-110 transition bg-[#0A84FF] shift-color-preset" data-color="#0A84FF"></button>
+            <button type="button" onclick="setShiftModalColor('#FF453A')" class="w-6 h-6 rounded-full border border-white/20 hover:scale-110 transition bg-[#FF453A] shift-color-preset" data-color="#FF453A"></button>
+            <button type="button" onclick="setShiftModalColor('#FFD60A')" class="w-6 h-6 rounded-full border border-white/20 hover:scale-110 transition bg-[#FFD60A] shift-color-preset" data-color="#FFD60A"></button>
+            <button type="button" onclick="setShiftModalColor('#FF375F')" class="w-6 h-6 rounded-full border border-white/20 hover:scale-110 transition bg-[#FF375F] shift-color-preset" data-color="#FF375F"></button>
+            <button type="button" onclick="setShiftModalColor('#6366F1')" class="w-6 h-6 rounded-full border border-white/20 hover:scale-110 transition bg-[#6366F1] shift-color-preset" data-color="#6366F1"></button>
+            <input type="color" id="shift-modal-color" class="w-8 h-8 rounded border-0 bg-transparent cursor-pointer">
+          </div>
+        </div>
+      </div>
+      <button onclick="saveShiftModal()" class="w-full py-2.5 bg-accent hover:bg-accentHover text-white text-xs font-bold rounded-xl transition shadow-lg">Salvar Turno</button>
     </div>
   </div>
-  <div class="next-card">
-    <div class="next-label">Amanhã · ${DAYS_PT[tmIdx]}</div>
-    <div class="next-shift">${getShift(tmSid)?`${getShiftLabel(tmSid)} · ${getShift(tmSid)?.startTime}`:'Folga'}</div>
-    <div class="next-sleep"><i class="ti ti-moon" style="color:var(--purple);font-size:14px;"></i> Deitar <strong>${sleepSug.bed}</strong> · Acordar <strong>${sleepSug.wake}</strong></div>
-    <div class="next-note">${sleepSug.note}</div>
+
+  <!-- Flex Task Modal -->
+  <div id="flex-task-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm flex items-end justify-center z-[150] px-4" onclick="closeFlexTaskModal()">
+    <div class="bg-cardBg w-full max-w-sm rounded-t-3xl border border-white/[0.08] p-5 space-y-4" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 id="flex-modal-title" class="text-sm font-extrabold text-white">Adicionar Hábito</h3>
+          <p class="text-[11px] text-neutral-400">Insira a frequência e duração desejadas para o hábito semanal.</p>
+        </div>
+        <button onclick="closeFlexTaskModal()" class="text-neutral-400 hover:text-white"><i class="ti ti-x text-lg"></i></button>
+      </div>
+      <div class="space-y-3">
+        <input type="hidden" id="flex-modal-idx" value="">
+        <div>
+          <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Nome do hábito / atividade flexível:</label>
+          <input type="text" id="flex-modal-name" placeholder="Ex: Ginásio, Leitura" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Frequência semanal:</label>
+            <input type="number" id="flex-modal-freq" value="3" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+          <div>
+            <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Duração (Min):</label>
+            <input type="number" id="flex-modal-dur" value="45" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+        </div>
+        <div>
+          <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Preferência de período:</label>
+          <select id="flex-modal-pref" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+            <option value="manhã">Manhã (Antes do trabalho)</option>
+            <option value="tarde">Tarde / Noite (Depois de casa)</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="saveFlexTaskModal()" class="w-full py-2.5 bg-[#0A84FF] hover:bg-blue-600 text-white text-xs font-bold rounded-xl transition shadow-lg">Salvar Hábito</button>
+    </div>
   </div>
-  <div style="height:1rem;"></div>`;
 
-  document.getElementById('hoje-content').innerHTML=html;
-}
+  <!-- Core Scripts -->
+  <script type="module">
+    // Import CDN-based Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      doc, 
+      getDoc, 
+      setDoc, 
+      collection, 
+      onSnapshot, 
+      deleteDoc,
+      getDocs,
+      addDoc,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-window.setEnergy=async function(val,key){energyData[key]=val;await saveEnergy(key,val);renderHoje();};
-window.toggleCheckHoje=async function(key,safeId,btn,wk){
-  const wd=weekData[wk];if(!wd)return;
-  wd.checked[key]=!wd.checked[key];
-  btn.classList.toggle('done');
-  const el=document.getElementById(safeId);if(el)el.classList.toggle('done');
-  await saveWeek(wk);
-  // update counter
-  renderHoje();
-};
+    // Application Configuration Fallbacks & Static Rules
+    const DEFAULT_SHIFTS = [
+      { id: "M", name: "M", start: "07:15", hours: 5.5, home: "14:00", color: "#0A84FF", notes: "Manhã" },
+      { id: "I", name: "I", start: "12:15", hours: 5.5, home: "19:00", color: "#378ADD", notes: "Intermédio" },
+      { id: "T", name: "T", start: "17:15", hours: 5.5, home: "00:15", color: "#D97706", notes: "Tarde" },
+      { id: "IT", name: "IT", start: "12:15", hours: 11, home: "00:15", color: "#7F77DD", notes: "Intermédio + Tarde" },
+      { id: "MIT", name: "MIT", start: "07:15", hours: 15.5, home: "00:15", color: "#EF4444", notes: "Triplo Turno" },
+      { id: "MI", name: "MI", start: "07:15", hours: 10.5, home: "18:30", color: "#EC4899", notes: "Manhã + Intermédio" },
+      { id: "F", name: "Folga", start: "00:00", hours: 0, home: "00:00", color: "#555452", notes: "Dia Livre" }
+    ];
 
-// ── SEMANA ────────────────────────────────────────────────
-function updateWeekHeader(){
-  const days=weekDays(curMon);
-  document.getElementById('wlabel').textContent=`${fmt(curMon)} – ${fmt(days[6])}`;
-  const now=getMonday(new Date());const diff=Math.round((curMon-now)/(7*86400000));
-  document.getElementById('wsub').textContent=diff===0?'Semana atual':diff===1?'Próxima semana':diff===-1?'Semana passada':diff>0?`+${diff} sem`:`${diff} sem`;
-}
-window.changeWeek=async function(d){curMon=new Date(curMon);curMon.setDate(curMon.getDate()+d*7);await ensureWeekLoaded(curMon);updateWeekHeader();renderDays();};
-window.goToday=async function(){curMon=getMonday(new Date());await ensureWeekLoaded(curMon);updateWeekHeader();renderDays();};
-window.switchWeekTab=function(tab){
-  document.getElementById('wt-turnos').classList.toggle('active',tab==='turnos');
-  document.getElementById('wt-plano').classList.toggle('active',tab==='plano');
-  document.getElementById('wt-pane-turnos').style.display=tab==='turnos'?'block':'none';
-  document.getElementById('wt-pane-plano').style.display=tab==='plano'?'block':'none';
-  if(tab==='plano'){const wd=getWD(curMon);if(wd.plan)renderPlan(wd.plan,wd.checked);}
-};
+    const DEFAULT_FLEX_TASKS = [
+      { id: "g1", name: "Ginásio", freq: 3, dur: 75, pref: "manhã" },
+      { id: "g2", name: "Leitura", freq: 4, dur: 30, pref: "manhã" },
+      { id: "g3", name: "Meditação", freq: 5, dur: 10, pref: "manhã" },
+      { id: "g4", name: "Diário", freq: 4, dur: 10, pref: "manhã" },
+      { id: "g5", name: "Gaming", freq: 3, dur: 90, pref: "tarde" },
+      { id: "g6", name: "Stream", freq: 1, dur: 120, pref: "tarde" },
+      { id: "g7", name: "Namorada", freq: 1, dur: 180, pref: "tarde" }
+    ];
 
-function renderDays(){
-  const wd=getWD(curMon);const days=weekDays(curMon);
-  const opts='<option value="folga">Folga</option>'+shiftTypes.map(s=>`<option value="${s.id}">${s.name}${s.notes?' — '+s.notes:''}</option>`).join('');
-  document.getElementById('days-grid').innerHTML=DAYS_KEY.map((k,i)=>{
-    const d=days[i];const tod=isToday(d);const val=wd.shifts?.[k]||'folga';const color=getShiftColor(val);
-    return`<div class="day-row"><div class="day-info${tod?' today':''}"><span class="day-num">${DAYS_PT[i].slice(0,3)} ${d.getDate()}</span><span class="day-name" style="font-size:11px;">${MONTHS_SHORT[d.getMonth()]}</span></div><select class="shift-sel" style="border-left:3px solid ${color};" onchange="setShift('${k}',this.value)">${opts.replace(`value="${val}"`,`value="${val}" selected`)}</select></div>`;
-  }).join('');
-  updateInfo();
-}
-window.setShift=async function(k,v){const wd=getWD(curMon);if(!wd.shifts)wd.shifts={};wd.shifts[k]=v;renderDays();await saveWeek(wKey(curMon));};
-function updateInfo(){
-  const wd=getWD(curMon);let h=0;DAYS_KEY.forEach(k=>h+=getShiftHours(wd.shifts?.[k]));
-  h=Math.round(h*10)/10;
-  document.getElementById('week-info').innerHTML=`<strong>${h}h</strong> de trabalho &nbsp;·&nbsp; ${getWeekType(h)}`;
-}
+    const BACKLOG_CATEGORIES = [
+      { key: "tarefa", label: "Tarefas", emoji: "📋" },
+      { key: "objectivo", label: "Objectivos", emoji: "🎯" },
+      { key: "compras", label: "Compras", emoji: "🛒" },
+      { key: "jogos", label: "Jogos", emoji: "🎮" },
+      { key: "leitura", label: "Leitura", emoji: "📚" },
+      { key: "pensar", label: "Pensar", emoji: "💡" }
+    ];
 
-function renderPlan(plan,checked){
-  const wd=getWD(curMon);const days=weekDays(curMon);const s=plan.weekSummary;
-  let html=`<div class="plan-stats">
-    <div class="stat-card"><div class="stat-val">${Math.round(s.workHours*10)/10}h</div><div class="stat-label">Trabalho</div></div>
-    <div class="stat-card"><div class="stat-val" style="font-size:13px;margin-top:4px;">${s.weekType}</div><div class="stat-label">Semana</div></div>
-    <div class="stat-card"><div class="stat-val">${s.activitiesPlanned}</div><div class="stat-label">Ativ.</div></div>
-    <div class="stat-card"><div class="stat-val">${s.restBlocks}</div><div class="stat-label">Desc.</div></div>
-  </div>`;
-  if(s.historyNote)html+=`<div class="history-note"><strong>Ajuste histórico</strong>${s.historyNote}</div>`;
-  html+='<div style="height:0.5rem;"></div>';
-  plan.days.forEach((day,di)=>{
-    const idx=DAYS_KEY.indexOf(day.day);const dateObj=days[idx>=0?idx:di];
-    const sid=wd.shifts?.[day.day]||'folga';const color=getShiftColor(sid);const label=getShiftLabel(sid);
-    const tod=isToday(dateObj);
-    const blocks=day.blocks.map((b,bi)=>{
-      const k=`${wKey(curMon)}-${day.day}-${b.time}-${b.title}`;
-      const done=checked[k]||false;const safeId='bt_'+k.replace(/[^a-z0-9]/gi,'_');
-      const n=day.blocks.length;
-      const radius=n===1?'border-radius:var(--radius);':bi===0?'border-radius:var(--radius) var(--radius) 0 0;':bi===n-1?'border-radius:0 0 var(--radius) var(--radius);':'';
-      return`<div class="block-card ${b.type}" style="${radius}"><span class="bc-time">${b.time}</span><div><div class="bc-title${done?' done':''}" id="${safeId}">${b.title}</div><div class="bc-sub">${durFmt(b.duration)}</div></div><button class="check${done?' done':''}" onclick="toggleCheckWeek('${k}','${safeId}',this)"><i class="ti ti-check"></i></button></div>`;
-    }).join('');
-    html+=`<div class="plan-day-head">${tod?'<div class="today-dot"></div>':''}<span class="pdh-name">${DAYS_PT[idx>=0?idx:di]}</span><span class="pdh-date">${fmt(dateObj)}</span><span class="pdh-badge" style="background:${color}22;color:${color};">${label}</span></div><div style="padding:0 1rem;margin-bottom:4px;">${blocks}</div>`;
-  });
-  document.getElementById('plan-area').innerHTML=html;
-}
-window.toggleCheckWeek=async function(key,safeId,btn){
-  const wd=getWD(curMon);wd.checked[key]=!wd.checked[key];
-  btn.classList.toggle('done');const el=document.getElementById(safeId);if(el)el.classList.toggle('done');
-  await saveWeek(wKey(curMon));
-};
+    const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+    const DAYS_SHORT = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+    const DAYS_PT = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"];
+    const UID = "alex";
 
-// ── HISTÓRICO ─────────────────────────────────────────────
-function renderHistory(){
-  const keys=Object.keys(weekData).sort().reverse().filter(k=>weekData[k]._loaded&&k<wKey(getMonday(new Date())));
-  if(!keys.length){document.getElementById('hist-list').innerHTML='<div class="no-plan"><i class="ti ti-history"></i><p>Sem semanas anteriores ainda.</p></div>';return;}
-  document.getElementById('hist-list').innerHTML=keys.map(k=>{
-    const wd=weekData[k];let h=0;DAYS_KEY.forEach(d=>h+=getShiftHours(wd.shifts?.[d]));
-    const total=Object.keys(wd.checked||{}).length;
-    const done=Object.values(wd.checked||{}).filter(Boolean).length;
-    const pct=total>0?Math.round(done/total*100):0;
-    const wt=getWeekTypeText(h);const wtLabel=getWeekType(h);
-    const wtColor=h<=thresholds.leve?'#1D9E75':h<=thresholds.normal?'#D97706':h<=thresholds.pesada?'#D85A30':'#E24B4A';
-    // dates
-    const mon=new Date(k);mon.setHours(12);
-    const sun=new Date(mon);sun.setDate(sun.getDate()+6);
-    return`<div class="hist-week">
-      <div class="hw-header">
-        <span class="hw-dates">${fmt(mon)} – ${fmt(sun)}</span>
-        <span class="hw-type" style="background:${wtColor}22;color:${wtColor};">${wtLabel.replace(/[🟢🟡🟠🔴]\s*/,'')}</span>
-      </div>
-      <div class="hw-stats">
-        <div class="hw-stat"><strong>${Math.round(h)}h</strong>trabalho</div>
-        <div class="hw-stat"><strong>${done}/${total}</strong>atividades</div>
-        <div class="hw-stat"><strong>${pct}%</strong>concluído</div>
-      </div>
-      <div class="hw-bar"><div class="hw-fill" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('');
-}
+    const firebaseConfig = {
+      apiKey: "AIzaSy867hGNCNIOHX1TdMZs3SNHn5dNVBRjP_4",
+      authDomain: "planeador-semanal.firebaseapp.com",
+      projectId: "planeador-semanal",
+      storageBucket: "planeador-semanal.firebasestorage.app",
+      messagingSenderId: "460355745741",
+      appId: "1:460355745741:web:b31c60aae0b6cae0e8f684"
+    };
 
-// ── CFG ───────────────────────────────────────────────────
-function renderShiftTypes(){
-  document.getElementById('shift-types-list').innerHTML=shiftTypes.map(s=>`<div class="cfg-card"><div class="cfg-left"><div class="cfg-dot" style="background:${s.color};"></div><div class="cfg-info"><div class="cfg-name">${s.name}</div><div class="cfg-meta">${s.startTime} · ${s.hours}h · casa ~${s.homeTime||'?'}${s.notes?' · '+s.notes:''}</div></div></div><div class="cfg-actions"><button class="icon-btn" onclick="editShift('${s.id}')"><i class="ti ti-pencil"></i></button><button class="icon-btn" onclick="delShift('${s.id}')"><i class="ti ti-x"></i></button></div></div>`).join('');
-}
-function renderTasks(){
-  document.getElementById('fixed-list').innerHTML=fixedTasks.length?fixedTasks.map(t=>`<div class="cfg-card"><div class="cfg-left"><div class="cfg-info"><div class="cfg-name">${t.name}</div><div class="cfg-meta">${DAYS_PT[t.dayIdx]} · ${t.time} · ${t.duration}min</div></div></div><div class="cfg-actions"><button class="icon-btn" onclick="editTask(${t.id},'fixed')"><i class="ti ti-pencil"></i></button><button class="icon-btn" onclick="delTask(${t.id},'fixed')"><i class="ti ti-x"></i></button></div></div>`).join(''):'<p style="font-size:13px;color:var(--text3);padding:4px 0 10px;">Nenhuma</p>';
-  document.getElementById('flex-list').innerHTML=flexTasks.map(t=>`<div class="cfg-card"><div class="cfg-left"><div class="cfg-info"><div class="cfg-name">${t.name}</div><div class="cfg-meta">${t.freq}×/sem · ${t.duration}min · ${t.pref==='manha'?'Manhã':t.pref==='tarde'?'Tarde':'Qualquer'}</div></div></div><div class="cfg-actions"><button class="icon-btn" onclick="editTask(${t.id},'flex')"><i class="ti ti-pencil"></i></button><button class="icon-btn" onclick="delTask(${t.id},'flex')"><i class="ti ti-x"></i></button></div></div>`).join('');
-}
-window.delShift=async function(id){shiftTypes=shiftTypes.filter(s=>s.id!==id);renderShiftTypes();renderDays();await saveConfig();};
-window.delTask=async function(id,type){if(type==='fixed')fixedTasks=fixedTasks.filter(t=>t.id!==id);else flexTasks=flexTasks.filter(t=>t.id!==id);renderTasks();await saveConfig();};
-window.editShift=function(id){
-  const st=shiftTypes.find(s=>s.id===id);if(!st)return;
-  editingId=id;editingType='shifttype';
-  ['m-shifttype','m-task','m-sleep','m-import','m-note','m-edit-task'].forEach(x=>document.getElementById(x).style.display='none');
-  document.getElementById('m-shifttype').style.display='block';
-  document.getElementById('m-title').textContent='Editar turno';
-  document.getElementById('st-name').value=st.name;document.getElementById('st-start').value=st.startTime;
-  document.getElementById('st-hours').value=st.hours;document.getElementById('st-home').value=st.homeTime||'19:00';
-  document.getElementById('st-notes').value=st.notes||'';selColor=st.color;buildColorGrid();
-  mMode='edit-shifttype';document.getElementById('modal-bg').classList.add('open');
-};
-window.editTask=function(id,type){
-  const list=type==='fixed'?fixedTasks:flexTasks;const t=list.find(x=>x.id===id);if(!t)return;
-  editingId=id;editingType=type;
-  ['m-shifttype','m-task','m-sleep','m-import','m-note'].forEach(x=>document.getElementById(x).style.display='none');
-  document.getElementById('m-edit-task').style.display='block';
-  document.getElementById('m-title').textContent=type==='fixed'?'Editar tarefa fixa':'Editar tarefa flexível';
-  document.getElementById('et-name').value=t.name;document.getElementById('et-dur').value=t.duration;
-  if(type==='flex'){document.getElementById('et-flex-extra').style.display='block';document.getElementById('et-fixed-extra').style.display='none';document.getElementById('et-pref').value=t.pref;document.getElementById('et-freq').value=t.freq;}
-  else{document.getElementById('et-flex-extra').style.display='none';document.getElementById('et-fixed-extra').style.display='block';document.getElementById('et-day').value=t.dayIdx;document.getElementById('et-time').value=t.time;}
-  mMode='edit-task';document.getElementById('modal-bg').classList.add('open');
-};
+    // State Container
+    const state = {
+      activeTab: "hoje",
+      weekStr: "",
+      selectedDayIndex: 0,
+      config: {
+        shiftTypes: [...DEFAULT_SHIFTS],
+        flexTasks: [...DEFAULT_FLEX_TASKS],
+        geminiKey: ""
+      },
+      weekState: {
+        shifts: { mon: "F", tue: "F", wed: "F", thu: "F", fri: "F", sat: "F", sun: "F" },
+        plan: null,
+        checked: {},
+        blockStatuses: {}
+      },
+      backlog: [],
+      sleepLogs: {},
+      energyLogs: {},
+      pastWeeksCache: [],
+      isOffline: true,
+      backlogFilter: "all",
+      backlogSort: "priority"
+    };
 
-// ── MODAL ─────────────────────────────────────────────────
-function buildColorGrid(){document.getElementById('color-grid').innerHTML=COLORS.map(c=>`<div class="color-opt${c===selColor?' sel':''}" style="background:${c};" onclick="selCol('${c}')"></div>`).join('');}
-window.selCol=function(c){selColor=c;buildColorGrid();};
-window.setStar=function(n){selStar=n;document.querySelectorAll('.star-btn').forEach((s,i)=>s.classList.toggle('active',i<n));};
-window.openModal=function(type,extra){
-  editingId=null;editingType=null;
-  mMode=type+(extra?'_'+extra:'');
-  ['m-shifttype','m-task','m-sleep','m-import','m-note','m-edit-task'].forEach(x=>document.getElementById(x).style.display='none');
-  const titles={shifttype:'Novo tipo de turno',fixed:'Tarefa fixa',flex:'Tarefa flexível',sleep:'Registar sono',import:'Importar plano',note:'Nota do dia'};
-  document.getElementById('m-title').textContent=titles[type]||'—';
-  if(type==='shifttype'){document.getElementById('m-shifttype').style.display='block';selColor=COLORS[0];buildColorGrid();document.getElementById('st-name').value='';}
-  if(type==='fixed'){document.getElementById('m-task').style.display='block';document.getElementById('t-flex-extra').style.display='none';document.getElementById('t-fixed-extra').style.display='block';document.getElementById('t-name').value='';}
-  if(type==='flex'){document.getElementById('m-task').style.display='block';document.getElementById('t-flex-extra').style.display='block';document.getElementById('t-fixed-extra').style.display='none';document.getElementById('t-name').value='';}
-  if(type==='sleep'){document.getElementById('m-sleep').style.display='block';selStar=0;document.querySelectorAll('.star-btn').forEach(s=>s.classList.remove('active'));}
-  if(type==='import'){document.getElementById('m-import').style.display='block';document.getElementById('import-json').value='';}
-  if(type==='note'){document.getElementById('m-note').style.display='block';const k=extra||dKey(new Date());document.getElementById('note-text').value=noteData[k]||'';}
-  document.getElementById('modal-bg').classList.add('open');
-};
-window.closeModal=function(e){if(!e||e.target===document.getElementById('modal-bg')){document.getElementById('modal-bg').classList.remove('open');editingId=null;editingType=null;}};
-window.saveModal=async function(){
-  const type=mMode.split('_')[0];
-  if(mMode==='edit-shifttype'){
-    const st=shiftTypes.find(s=>s.id===editingId);if(!st)return;
-    st.name=document.getElementById('st-name').value.trim()||st.name;st.startTime=document.getElementById('st-start').value;
-    st.hours=parseFloat(document.getElementById('st-hours').value)||st.hours;st.homeTime=document.getElementById('st-home').value;
-    st.color=selColor;st.notes=document.getElementById('st-notes').value.trim();
-    renderShiftTypes();renderDays();await saveConfig();
-  }else if(mMode==='edit-task'){
-    const list=editingType==='fixed'?fixedTasks:flexTasks;const t=list.find(x=>x.id===editingId);if(!t)return;
-    t.name=document.getElementById('et-name').value.trim()||t.name;t.duration=parseInt(document.getElementById('et-dur').value)||t.duration;
-    if(editingType==='flex'){t.pref=document.getElementById('et-pref').value;t.freq=parseInt(document.getElementById('et-freq').value)||t.freq;}
-    else{t.dayIdx=parseInt(document.getElementById('et-day').value);t.time=document.getElementById('et-time').value;}
-    renderTasks();await saveConfig();
-  }else if(type==='shifttype'){
-    const name=document.getElementById('st-name').value.trim();if(!name)return;
-    shiftTypes.push({id:'st'+Date.now(),name,startTime:document.getElementById('st-start').value,hours:parseFloat(document.getElementById('st-hours').value)||5.5,homeTime:document.getElementById('st-home').value||'19:00',color:selColor,notes:document.getElementById('st-notes').value.trim()});
-    renderShiftTypes();renderDays();await saveConfig();
-  }else if(type==='fixed'||type==='flex'){
-    const name=document.getElementById('t-name').value.trim();if(!name)return;
-    const dur=parseInt(document.getElementById('t-dur').value)||60;const id=nid++;
-    if(type==='fixed')fixedTasks.push({id,name,dayIdx:parseInt(document.getElementById('t-day').value),time:document.getElementById('t-time').value,duration:dur});
-    else flexTasks.push({id,name,pref:document.getElementById('t-pref').value,freq:parseInt(document.getElementById('t-freq').value)||1,duration:dur});
-    renderTasks();await saveConfig();
-  }else if(type==='sleep'){
-    const key=mMode.replace('sleep_','');
-    const entry={bed:document.getElementById('sl-bed').value,wake:document.getElementById('sl-wake').value,stars:selStar||3,note:document.getElementById('sl-note').value.trim()};
-    sleepData[key]=entry;await saveSleep(key,entry);renderHoje();
-  }else if(type==='import'){
-    const raw=document.getElementById('import-json').value.trim();
-    try{
-      const plan=JSON.parse(raw);const wd=getWD(curMon);wd.plan=plan;
-      await saveWeek(wKey(curMon));
-      if(document.getElementById('wt-pane-plano').style.display!=='none')renderPlan(plan,wd.checked);
-      if(wKey(curMon)===wKey(getMonday(new Date())))renderHoje();
-      alert('✅ Plano importado!');
-    }catch(e){alert('❌ JSON inválido.');}
-  }else if(type==='note'){
-    const key=mMode.replace('note_','');const val=document.getElementById('note-text').value.trim();
-    noteData[key]=val;await saveNote(key,val);renderHoje();
+    let db = null;
+    const $ = (id) => document.getElementById(id);
+
+    // Date calculations
+    function getMonday(d) {
+      const dateCopy = new Date(d);
+      const day = dateCopy.getDay();
+      const diff = dateCopy.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(dateCopy.setDate(diff)).toISOString().split("T")[0];
+    }
+    function dKey(d) {
+      return d.toISOString().split("T")[0];
+    }
+    function todayKey() {
+      return dKey(new Date());
+    }
+    function getWeekDays(monStr) {
+      const days = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monStr);
+        d.setDate(d.getDate() + i);
+        days.push(d);
+      }
+      return days;
+    }
+    function timeToMin(t) {
+      if (!t || typeof t !== "string") return 0;
+      const [h, m] = t.split(":").map(Number);
+      return h * 60 + m;
+    }
+
+    // Set Initial Date Context
+    const initialToday = new Date();
+    state.weekStr = getMonday(initialToday);
+    const currDayIdx = initialToday.getDay() === 0 ? 6 : initialToday.getDay() - 1;
+    state.selectedDayIndex = currDayIdx;
+
+    // Toast alert helper
+    window.showToast = function(msg) {
+      const toastEl = $("toast");
+      const textEl = $("toast-text");
+      textEl.innerText = msg;
+      toastEl.classList.remove("hidden");
+      setTimeout(() => {
+        toastEl.classList.add("hidden");
+      }, 2500);
+    };
+
+    // Cache fallback helpers
+    function loadLocal(key, fallback) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+      } catch (e) { return fallback; }
+    }
+    function saveLocal(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+    }
+
+    function sanitizeWeekState(ws) {
+      if (!ws || typeof ws !== "object") {
+        ws = {};
+      }
+      if (!ws.shifts || typeof ws.shifts !== "object") {
+        ws.shifts = { mon: "F", tue: "F", wed: "F", thu: "F", fri: "F", sat: "F", sun: "F" };
+      }
+      // Ensure all keys are defined on shifts
+      const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+      days.forEach(d => {
+        if (!ws.shifts[d]) ws.shifts[d] = "F";
+      });
+      if (!ws.checked || typeof ws.checked !== "object") {
+        ws.checked = {};
+      }
+      if (!ws.blockStatuses || typeof ws.blockStatuses !== "object") {
+        ws.blockStatuses = {};
+      }
+      return ws;
+    }
+
+    function sanitizeConfig(cfg) {
+      if (!cfg || typeof cfg !== "object") {
+        cfg = {};
+      }
+      if (!Array.isArray(cfg.shiftTypes)) {
+        cfg.shiftTypes = [...DEFAULT_SHIFTS];
+      }
+      if (!Array.isArray(cfg.flexTasks)) {
+        cfg.flexTasks = [...DEFAULT_FLEX_TASKS];
+      }
+      if (typeof cfg.geminiKey !== "string") {
+        cfg.geminiKey = "";
+      }
+      return cfg;
+    }
+
+    // Initialize application and connections
+    async function initApp() {
+      // Load fallback local config immediately and sanitize
+      state.config = sanitizeConfig(loadLocal("alex_config_v3", state.config));
+      state.backlog = loadLocal("alex_backlog_v3", []);
+      if (!Array.isArray(state.backlog)) state.backlog = [];
+      
+      state.weekState = sanitizeWeekState(loadLocal(`alex_week_v3_${state.weekStr}`, state.weekState));
+      state.sleepLogs = loadLocal("alex_sleep_v3", {}) || {};
+      state.energyLogs = loadLocal("alex_energy_v3", {}) || {};
+
+      try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        state.isOffline = false;
+        
+        const connBadge = $("connection-badge");
+        if (connBadge) {
+          connBadge.className = "flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider";
+          connBadge.innerHTML = `<i class="ti ti-wifi text-xs"></i> <span>Nuvem</span>`;
+        }
+
+        // Load config
+        const cfgRef = doc(db, `users/${UID}/config/main`);
+        const cfgSnap = await getDoc(cfgRef);
+        if (cfgSnap.exists()) {
+          const cloudData = cfgSnap.data();
+          state.config.shiftTypes = cloudData.shiftTypes || state.config.shiftTypes;
+          state.config.flexTasks = cloudData.flexTasks || state.config.flexTasks;
+          state.config.geminiKey = cloudData.geminiKey || state.config.geminiKey;
+          state.config = sanitizeConfig(state.config);
+          saveLocal("alex_config_v3", state.config);
+        } else {
+          await setDoc(cfgRef, state.config);
+        }
+
+        // Load active week
+        await loadCloudWeekState(state.weekStr);
+
+        // Preload sleep & energy logs
+        const days = getWeekDays(state.weekStr);
+        for (let d of days) {
+          const k = dKey(d);
+          const sSnap = await getDoc(doc(db, `users/${UID}/sleep/${k}`));
+          if (sSnap.exists()) state.sleepLogs[k] = sSnap.data();
+          const eSnap = await getDoc(doc(db, `users/${UID}/energy/${k}`));
+          if (eSnap.exists()) state.energyLogs[k] = eSnap.data().value || "";
+        }
+        saveLocal("alex_sleep_v3", state.sleepLogs);
+        saveLocal("alex_energy_v3", state.energyLogs);
+
+        // Realtime Backlog Sync
+        onSnapshot(collection(db, `users/${UID}/backlog`), (snap) => {
+          const items = [];
+          snap.forEach((doc) => {
+            items.push({ id: doc.id, ...doc.data() });
+          });
+          state.backlog = items;
+          saveLocal("alex_backlog_v3", items);
+          renderActiveTab();
+          updateBacklogNavBadge();
+        }, (err) => {
+          console.warn("Firestore sync backlog permission denied or unavailable:", err);
+        });
+
+      } catch (err) {
+        console.warn("Firestore offline fallback active:", err);
+        state.isOffline = true;
+        const connBadge = $("connection-badge");
+        if (connBadge) {
+          connBadge.className = "flex items-center gap-1.5 bg-neutral-900 px-3 py-1 rounded-full border border-neutral-800 text-neutral-500 text-[10px] font-bold uppercase tracking-wider";
+          connBadge.innerHTML = `<i class="ti ti-wifi-off text-xs"></i> <span>Local</span>`;
+        }
+      }
+
+      await loadHistoryAndMetrics();
+      renderActiveTab();
+      updateBacklogNavBadge();
+    }
+
+    async function loadCloudWeekState(weekStr) {
+      if (state.isOffline || !db) return;
+      try {
+        const dSnap = await getDoc(doc(db, `users/${UID}/weeks/${weekStr}`));
+        if (dSnap.exists()) {
+          state.weekState = sanitizeWeekState(dSnap.data());
+          saveLocal(`alex_week_v3_${weekStr}`, state.weekState);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    async function saveCloudWeekState() {
+      state.weekState = sanitizeWeekState(state.weekState);
+      saveLocal(`alex_week_v3_${state.weekStr}`, state.weekState);
+      if (state.isOffline || !db) return;
+      try {
+        await setDoc(doc(db, `users/${UID}/weeks/${state.weekStr}`), state.weekState);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    async function saveCloudConfig() {
+      state.config = sanitizeConfig(state.config);
+      saveLocal("alex_config_v3", state.config);
+      if (state.isOffline || !db) return;
+      try {
+        await setDoc(doc(db, `users/${UID}/config/main`), state.config);
+      } catch (e) {
+        console.warn("Firestore error writing config:", e);
+      }
+    }
+
+    function updateBacklogNavBadge() {
+      const pendingCount = (state.backlog || []).filter(b => b.status !== "done").length;
+      const bBadge = $("backlog-badge");
+      if (bBadge) {
+        if (pendingCount > 0) {
+          bBadge.innerText = pendingCount;
+          bBadge.classList.remove("hidden");
+        } else {
+          bBadge.classList.add("hidden");
+        }
+      }
+    }
+
+    // Passive past weeks log calculation
+    async function loadHistoryAndMetrics() {
+      // Pre-calculate last 3 weeks metrics
+      const pastWeeks = [];
+      const currentMonDate = new Date(state.weekStr);
+      
+      for (let i = 1; i <= 3; i++) {
+        const prevMon = new Date(currentMonDate);
+        prevMon.setDate(prevMon.getDate() - (7 * i));
+        const prevMonStr = prevMon.toISOString().split("T")[0];
+        
+        let localData = loadLocal(`alex_week_v3_${prevMonStr}`, null);
+        if (!localData && !state.isOffline && db) {
+          try {
+            const snap = await getDoc(doc(db, `users/${UID}/weeks/${prevMonStr}`));
+            if (snap.exists()) {
+              localData = snap.data();
+              saveLocal(`alex_week_v3_${prevMonStr}`, localData);
+            }
+          } catch(e) {}
+        }
+
+        if (localData) {
+          // Calculate work hours sum
+          let totalWorkHours = 0;
+          Object.values(localData.shifts || {}).forEach(shId => {
+            const sh = state.config.shiftTypes.find(s => s.id === shId);
+            if (sh) totalWorkHours += sh.hours;
+          });
+
+          // Calculate sleep logs
+          let totalSleep = 0;
+          let daysLogged = 0;
+          const prevDays = getWeekDays(prevMonStr);
+          prevDays.forEach(d => {
+            const targetSleepKey = dKey(d);
+            const sl = state.sleepLogs[targetSleepKey];
+            if (sl && sl.bed && sl.wake) {
+              let bedM = timeToMin(sl.bed);
+              let wakeM = timeToMin(sl.wake);
+              if (wakeM <= bedM) wakeM += 1440;
+              totalSleep += (wakeM - bedM) / 60;
+              daysLogged++;
+            }
+          });
+
+          pastWeeks.push({
+            weekStr: prevMonStr,
+            totalWorkHours,
+            sleepAverage: daysLogged > 0 ? Math.round((totalSleep / daysLogged) * 10) / 10 : null
+          });
+        }
+      }
+      state.pastWeeksCache = pastWeeks;
+    }
+
+    function getLoadLabel(hours) {
+      if (hours === 0) return { label: "Sem Carga", color: "#555452" };
+      if (hours <= 25) return { label: "Carga Baixa", color: "#1D9E75" };
+      if (hours <= 40) return { label: "Carga Normal", color: "#0A84FF" };
+      return { label: "Carga Crítica", color: "#EF4444" };
+    }
+
+    // Tab routing
+    window.switchTab = function(tabName) {
+      state.activeTab = tabName;
+      ["hoje", "semana", "backlog", "config"].forEach(t => {
+        const btn = $(`nav-${t}`);
+        if (t === tabName) {
+          btn.className = "flex flex-col items-center gap-1 text-[10px] font-extrabold transition-all shrink-0 w-[25%] text-accent scale-102";
+        } else {
+          btn.className = "flex flex-col items-center gap-1 text-[10px] font-extrabold transition-all shrink-0 w-[25%] text-neutral-500 hover:text-neutral-300";
+        }
+      });
+      renderActiveTab();
+    };
+
+    function renderActiveTab() {
+      const container = $("tab-container");
+      container.innerHTML = "";
+
+      if (state.activeTab === "hoje") {
+        renderHojeTab(container);
+      } else if (state.activeTab === "semana") {
+        renderSemanaTab(container);
+      } else if (state.activeTab === "backlog") {
+        renderBacklogTab(container);
+      } else if (state.activeTab === "config") {
+        renderConfigTab(container);
+      }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // TAB 1: HOJE (Today's Plan and Sleep Auditing)
+    // ────────────────────────────────────────────────────────────────────────
+    function renderHojeTab(container) {
+      const days = getWeekDays(state.weekStr);
+      const currentDay = days[state.selectedDayIndex];
+      const selectedDayStr = dKey(currentDay);
+      const isToday = selectedDayStr === todayKey();
+      
+      const dayKey = DAY_KEYS[state.selectedDayIndex];
+      const activeShiftId = state.weekState.shifts?.[dayKey] || "F";
+      const shiftObj = state.config.shiftTypes.find(s => s.id === activeShiftId) || { name: "Folga", color: "#555452", notes: "Livre" };
+
+      const dayPlan = state.weekState.plan?.days?.[dayKey] || { blocks: [] };
+      const blocks = dayPlan.blocks || [];
+
+      // Completion calculations
+      let completedCount = 0;
+      blocks.forEach((b, idx) => {
+        const k = `${dayKey}_${idx}`;
+        const isCh = state.weekState.checked?.[k];
+        const statusObj = state.weekState.blockStatuses?.[k] || {};
+        if (isCh || statusObj.status === "done") completedCount++;
+      });
+      const progressPct = blocks.length > 0 ? Math.round((completedCount / blocks.length) * 100) : 0;
+
+      // Yesterday's Sleep calculation
+      const yesterdayDate = new Date(currentDay);
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayStr = dKey(yesterdayDate);
+      const yesterdaySleep = state.sleepLogs[yesterdayStr];
+
+      let yesterdayHours = 0;
+      let yesterdayCycles = 0;
+      let sleepAnalysisText = "";
+      let isOptimalSleep = false;
+
+      if (yesterdaySleep && yesterdaySleep.bed && yesterdaySleep.wake) {
+        let bedM = timeToMin(yesterdaySleep.bed);
+        let wakeM = timeToMin(yesterdaySleep.wake);
+        if (wakeM <= bedM) wakeM += 1440;
+        const totalMin = wakeM - bedM;
+        yesterdayHours = Math.round((totalMin / 60) * 10) / 10;
+        const cycles = totalMin / 90;
+        yesterdayCycles = Math.round(cycles * 10) / 10;
+        
+        const cycleRemainder = totalMin % 90;
+        if (cycleRemainder <= 15 || cycleRemainder >= 75) {
+          isOptimalSleep = true;
+          sleepAnalysisText = `Dormiste ${Math.round(cycles)} ciclos de 90min completos. Acordaste na fase ideal de sono leve!`;
+        } else {
+          sleepAnalysisText = `Dormiste ${yesterdayCycles} ciclos. Acordaste a meio de um ciclo de sono profundo; podes sentir alguma inércia matinal hoje.`;
+        }
+      }
+
+      let html = `
+        <!-- Title bar -->
+        <div class="flex items-center justify-between bg-neutral-900/60 p-3 rounded-2xl border border-white/[0.03]">
+          <div class="flex flex-col">
+            <span class="text-[10px] font-black uppercase tracking-wider text-neutral-500">${DAYS_PT[state.selectedDayIndex]}</span>
+            <span class="text-xs font-bold text-neutral-100">${currentDay.toLocaleDateString("pt-PT", { day: "numeric", month: "long" })}</span>
+          </div>
+          <div class="px-2.5 py-1 rounded-full text-[10px] font-bold border" style="background-color: ${shiftObj.color || '#0A84FF'}15; border-color: ${shiftObj.color || '#0A84FF'}30; color: ${shiftObj.color || '#0A84FF'}">
+            Turno ${(!shiftObj.name || shiftObj.name === 'undefined') ? (shiftObj.id || '?') : shiftObj.name} (${shiftObj.notes || 'Sem notas'})
+          </div>
+        </div>
+
+        <!-- Weekly navigation strip -->
+        <div class="grid grid-cols-7 gap-1.5">
+          ${days.map((wd, idx) => {
+            const isSel = idx === state.selectedDayIndex;
+            const wdStr = dKey(wd);
+            const isRealToday = wdStr === todayKey();
+            const dShId = state.weekState.shifts?.[DAY_KEYS[idx]] || "F";
+            const shObj = state.config.shiftTypes.find(s => s.id === dShId) || { name: "F" };
+            return `
+              <button onclick="selectDay(${idx})" class="py-2.5 px-0.5 rounded-2xl flex flex-col items-center justify-center transition border ${
+                isSel 
+                  ? "bg-accent border-accent text-white" 
+                  : isRealToday 
+                    ? "bg-neutral-900 border-accent/40 text-accent font-bold" 
+                    : "bg-[#141413] border-white/[0.03] text-neutral-400 hover:border-neutral-800"
+              }">
+                <span class="text-[9px] uppercase font-extrabold tracking-wider opacity-65">${DAYS_SHORT[idx]}</span>
+                <span class="text-xs font-bold my-0.5">${wd.getDate()}</span>
+                <span class="text-[8px] font-black truncate max-w-full block px-0.5" style="color: ${isSel ? '#ffffff' : shObj.color || '#555452'}">${shObj.id}</span>
+              </button>
+            `;
+          }).join("")}
+        </div>
+
+        <!-- Completion stats -->
+        <div class="bg-cardBg p-4 rounded-3xl border border-white/[0.04] space-y-3 shadow-lg">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xs font-black uppercase text-neutral-400 tracking-wider">Metas Diárias</h3>
+            <span class="text-xs font-extrabold text-accent">${completedCount}/${blocks.length} Concluídos (${progressPct}%)</span>
+          </div>
+          <div class="w-full bg-neutral-950 h-2.5 rounded-full overflow-hidden border border-white/[0.02]">
+            <div class="bg-accent h-full transition-all duration-500" style="width: ${progressPct}%"></div>
+          </div>
+        </div>
+
+        <!-- Yesterday's sleep logs and Energy Selector (Bio-Tracking) -->
+        <div class="grid grid-cols-2 gap-3">
+          <div onclick="openSleepModal('${selectedDayStr}')" class="bg-cardBg p-3.5 rounded-3xl border border-white/[0.04] space-y-1.5 cursor-pointer hover:border-neutral-800 transition shadow-md">
+            <div class="flex justify-between items-center text-neutral-500">
+              <span class="text-[9px] uppercase font-black tracking-wider">Sono de Ontem</span>
+              <i class="ti ti-moon text-blue-400"></i>
+            </div>
+            <div class="flex items-baseline gap-1">
+              <span class="text-lg font-black text-white">${yesterdayHours > 0 ? `${yesterdayHours}h` : "Sem dados"}</span>
+              ${yesterdayCycles > 0 ? `<span class="text-[9px] text-neutral-500 font-bold">${yesterdayCycles} ciclos</span>` : ""}
+            </div>
+            <span class="text-[10px] text-accent font-bold underline block mt-1">Registar sono</span>
+          </div>
+
+          <div class="bg-cardBg p-3.5 rounded-3xl border border-white/[0.04] space-y-2 shadow-md">
+            <div class="flex justify-between items-center text-neutral-500">
+              <span class="text-[9px] uppercase font-black tracking-wider">Energia Hoje</span>
+              <i class="ti ti-bolt text-amber-400"></i>
+            </div>
+            <div class="flex justify-around items-center gap-1 pt-1">
+              ${["baixa", "normal", "alta", "excelente"].map(lvl => {
+                const isSel = (state.energyLogs[selectedDayStr] || "normal") === lvl;
+                const emoji = lvl === "baixa" ? "🥱" : lvl === "normal" ? "😐" : lvl === "alta" ? "⚡" : "🔥";
+                return `
+                  <button onclick="saveEnergy('${selectedDayStr}', '${lvl}')" class="w-7 h-7 flex items-center justify-center rounded-lg border text-sm transition-all ${
+                    isSel ? "bg-amber-500/15 border-amber-500 scale-105" : "bg-neutral-900 border-white/[0.03] opacity-60 hover:opacity-100"
+                  }">${emoji}</button>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        </div>
+
+        <!-- Sleep cycle insight card -->
+        ${sleepAnalysisText ? `
+          <div class="bg-indigo-950/20 border border-indigo-500/15 p-3 rounded-2xl flex items-start gap-2.5 shadow-sm">
+            <i class="ti ti-info-circle text-indigo-400 mt-0.5 text-base shrink-0"></i>
+            <div class="text-[10px] leading-relaxed text-neutral-300">
+              <strong class="text-white block mb-0.5">${isOptimalSleep ? "Fase Circadiana Excelente" : "Fase de Despertar Desalinhada"}</strong>
+              ${sleepAnalysisText}
+              ${yesterdayHours < 7 ? '<span class="text-red-400 font-bold block mt-1">⚠️ Cuidado: Dormiste menos de 7 horas. Recomenda-se sesta de 20 minutos hoje!</span>' : ''}
+            </div>
+          </div>
+        ` : ""}
+
+        <!-- Day block list section -->
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xs font-black uppercase text-neutral-400 tracking-wider">Plano de Atividades</h3>
+            <button onclick="openAddBlockModal()" class="px-3 py-1 bg-neutral-900 hover:bg-neutral-850 rounded-xl border border-white/[0.04] text-[10px] font-bold text-accent flex items-center gap-1 transition">
+              <i class="ti ti-plus"></i> Bloco Manual
+            </button>
+          </div>
+
+          <div class="space-y-2.5 relative">
+            ${blocks.length > 0 ? blocks.map((b, idx) => {
+              const blkK = `${dayKey}_${idx}`;
+              const isCh = state.weekState.checked?.[blkK] || false;
+              const statusObj = state.weekState.blockStatuses?.[blkK] || {};
+              const status = isCh ? "done" : statusObj.status || "pending";
+              const isDone = status === "done";
+              const isSkipped = status === "skipped";
+
+              let statusText = "Pendente";
+              let badgeColor = "bg-neutral-800 text-neutral-400 border-white/[0.03]";
+              if (isDone) {
+                statusText = "Concluido";
+                badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+              } else if (isSkipped) {
+                statusText = "Adiado";
+                badgeColor = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+              }
+
+              return `
+                <div class="flex items-center gap-3 p-3 rounded-2xl border transition ${
+                  isDone 
+                    ? "bg-[#141413]/30 border-white/[0.01] opacity-40" 
+                    : isSkipped 
+                      ? "bg-amber-950/5 border-amber-900/10" 
+                      : "bg-[#181816] border-white/[0.04] hover:border-neutral-800"
+                }">
+                  
+                  <!-- Checkbox action -->
+                  <div onclick="toggleBlockCheck('${dayKey}', ${idx})" class="w-5 h-5 rounded-lg border flex items-center justify-center cursor-pointer shrink-0 transition ${
+                    isDone 
+                      ? "bg-emerald-500 border-emerald-500 text-neutral-950" 
+                      : "border-neutral-700 hover:border-neutral-500"
+                  }">
+                    ${isDone ? '<i class="ti ti-check text-xs font-black"></i>' : ''}
+                  </div>
+
+                  <!-- Details -->
+                  <div onclick="openBlockModal('${dayKey}', ${idx})" class="flex-1 min-w-0 cursor-pointer">
+                    <h4 class="text-xs font-extrabold text-neutral-100 truncate ${isDone ? 'line-through text-neutral-500' : ''}">${b.title}</h4>
+                    <div class="flex flex-wrap items-center gap-1.5 mt-0.5 text-[9px] text-neutral-500 uppercase font-black tracking-wider">
+                      <span class="text-accent font-bold font-mono">${b.time}</span>
+                      <span>·</span>
+                      <span class="font-bold font-mono">${b.duration} MIN</span>
+                      <span>·</span>
+                      <span class="px-1.5 py-0.5 rounded border ${badgeColor}">${statusText}</span>
+                    </div>
+                    ${isSkipped && statusObj.justification ? `
+                      <span class="text-[9px] text-amber-500/80 block mt-1 italic font-medium">⚠️ Razão: ${statusObj.justification}</span>
+                    ` : ""}
+                  </div>
+
+                  <button onclick="openBlockModal('${dayKey}', ${idx})" class="p-1.5 text-neutral-600 hover:text-white rounded-lg transition">
+                    <i class="ti ti-adjustments-alt text-base"></i>
+                  </button>
+                </div>
+              `;
+            }).join("") : `
+              <div class="text-center py-8 text-neutral-600 bg-[#141413]/30 rounded-2xl border border-white/[0.02]">
+                <i class="ti ti-folder-open text-2xl mb-1.5 block"></i>
+                <span class="text-[11px]">Nenhum plano gerado para hoje.</span>
+                <button onclick="switchTab('semana')" class="text-accent font-bold underline text-[10px] block mt-1">Gerar Plano na Semana</button>
+              </div>
+            `}
+          </div>
+        </div>
+
+        <!-- Passive past weeks list -->
+        <div class="space-y-2.5">
+          <h3 class="text-xs font-black uppercase text-neutral-400 tracking-wider">Histórico de Performance (Últimas 3 Semanas)</h3>
+          <div class="space-y-2">
+            ${state.pastWeeksCache.length > 0 ? state.pastWeeksCache.map(data => {
+              const weekLabel = `Semana de ${new Date(data.weekStr).toLocaleDateString("pt-PT", { day: "numeric", month: "short" })}`;
+              const loadDetails = getLoadLabel(data.totalWorkHours);
+              return `
+                <div class="bg-cardBg/40 border border-white/[0.03] p-3 rounded-2xl flex items-center justify-between text-xs">
+                  <div class="space-y-0.5">
+                    <span class="font-bold text-white block text-[11px]">${weekLabel}</span>
+                    <span class="text-[9px] text-neutral-500 uppercase font-extrabold tracking-wider">
+                      Carga: <span style="color: ${loadDetails.color}">${data.totalWorkHours}h (${loadDetails.label})</span>
+                    </span>
+                  </div>
+                  <div class="text-right space-y-0.5">
+                    <span class="font-bold text-neutral-300 block text-[11px]">Sono: ${data.sleepAverage ? `${data.sleepAverage}h/noite` : "Sem dados"}</span>
+                    <span class="text-[9px] text-accent uppercase font-black tracking-widest">Estável ✅</span>
+                  </div>
+                </div>
+              `;
+            }).join("") : `
+              <div class="text-center py-4 text-neutral-600 text-[10px]">
+                Nenhum histórico disponível de semanas anteriores.
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    window.selectDay = function(idx) {
+      state.selectedDayIndex = idx;
+      renderActiveTab();
+    };
+
+    window.saveEnergy = async function(dateStr, lvl) {
+      state.energyLogs[dateStr] = lvl;
+      saveLocal("alex_energy_v3", state.energyLogs);
+      renderActiveTab();
+      if (state.isOffline || !db) return;
+      try {
+        await setDoc(doc(db, `users/${UID}/energy/${dateStr}`), { value: lvl });
+        showToast("⚡ Energia guardada!");
+      } catch (e) {}
+    };
+
+    // Modal Sleep controls
+    let activeSleepDateStr = "";
+    window.openSleepModal = function(dateStr) {
+      activeSleepDateStr = dateStr;
+      const targetDate = new Date(dateStr);
+      targetDate.setDate(targetDate.getDate() - 1);
+      const yesterdayStr = dKey(targetDate);
+      
+      const currentLog = state.sleepLogs[yesterdayStr] || { bed: "23:00", wake: "07:30" };
+      $("sleep-bed-time").value = currentLog.bed;
+      $("sleep-wake-time").value = currentLog.wake;
+      $("sleep-modal").classList.remove("hidden");
+    };
+    window.closeSleepModal = function() {
+      $("sleep-modal").classList.add("hidden");
+    };
+    window.saveSleep = async function() {
+      const targetDate = new Date(activeSleepDateStr);
+      targetDate.setDate(targetDate.getDate() - 1);
+      const yesterdayStr = dKey(targetDate);
+
+      const bedVal = $("sleep-bed-time").value;
+      const wakeVal = $("sleep-wake-time").value;
+      const data = { bed: bedVal, wake: wakeVal };
+
+      state.sleepLogs[yesterdayStr] = data;
+      saveLocal("alex_sleep_v3", state.sleepLogs);
+      closeSleepModal();
+      renderActiveTab();
+
+      if (!state.isOffline && db) {
+        try {
+          await setDoc(doc(db, `users/${UID}/sleep/${yesterdayStr}`), data);
+          showToast("🌙 Sono guardado na Nuvem!");
+          await loadHistoryAndMetrics();
+          renderActiveTab();
+        } catch (e) {}
+      } else {
+        showToast("🌙 Sono guardado localmente!");
+      }
+    };
+
+    // Modal block status adjustments
+    let activeBlockDayKey = "";
+    let activeBlockIdx = null;
+    window.openBlockModal = function(dayKey, idx) {
+      activeBlockDayKey = dayKey;
+      activeBlockIdx = idx;
+      
+      const dayPlan = state.weekState.plan?.days?.[dayKey] || { blocks: [] };
+      const block = dayPlan.blocks[idx];
+      if (!block) return;
+      
+      $("modal-justification").value = "";
+      $("edit-block-title").value = block.title;
+      $("edit-block-time").value = block.time;
+      $("edit-block-dur").value = block.duration;
+      $("edit-block-type").value = block.type || "activity";
+      
+      $("block-modal").classList.remove("hidden");
+    };
+    window.closeBlockModal = function() {
+      $("block-modal").classList.add("hidden");
+    };
+
+    window.toggleBlockCheck = async function(dayKey, idx) {
+      const blkK = `${dayKey}_${idx}`;
+      const wasChecked = state.weekState.checked?.[blkK] || false;
+      const nextChecked = !wasChecked;
+      
+      if (!state.weekState.checked) state.weekState.checked = {};
+      state.weekState.checked[blkK] = nextChecked;
+
+      if (!state.weekState.blockStatuses) state.weekState.blockStatuses = {};
+      state.weekState.blockStatuses[blkK] = {
+        status: nextChecked ? "done" : "pending"
+      };
+
+      renderActiveTab();
+      await saveCloudWeekState();
+    };
+
+    window.setBlockStatus = async function(status) {
+      if (activeBlockIdx === null) return;
+      const blkK = `${activeBlockDayKey}_${activeBlockIdx}`;
+      
+      if (!state.weekState.blockStatuses) state.weekState.blockStatuses = {};
+      if (!state.weekState.checked) state.weekState.checked = {};
+
+      const justification = $("modal-justification").value.trim();
+      
+      state.weekState.blockStatuses[blkK] = {
+        status: status,
+        justification: justification || ""
+      };
+      
+      state.weekState.checked[blkK] = (status === "done");
+
+      if (status === "skipped") {
+        const block = state.weekState.plan?.days?.[activeBlockDayKey]?.blocks?.[activeBlockIdx];
+        if (block && confirm(`Deseja mover "${block.title}" para o seu Backlog?`)) {
+          await addBacklogItemDirect(block.title, "tarefa", "normal", null);
+        }
+      }
+
+      closeBlockModal();
+      renderActiveTab();
+      await saveCloudWeekState();
+    };
+
+    window.saveBlockDirectly = async function() {
+      if (activeBlockIdx === null) return;
+      const plan = state.weekState.plan;
+      if (!plan || !plan.days || !plan.days[activeBlockDayKey]) return;
+      
+      const blocks = plan.days[activeBlockDayKey].blocks || [];
+      const title = $("edit-block-title").value.trim();
+      const time = $("edit-block-time").value;
+      const dur = Number($("edit-block-dur").value);
+      const type = $("edit-block-type").value;
+      
+      if (!title) return;
+      
+      blocks[activeBlockIdx] = { title, time, duration: dur, type };
+      blocks.sort((a,b) => a.time.localeCompare(b.time));
+      
+      closeBlockModal();
+      renderActiveTab();
+      await saveCloudWeekState();
+      showToast("💾 Bloco atualizado!");
+    };
+
+    window.deleteBlockDirectly = async function() {
+      if (activeBlockIdx === null) return;
+      if (!confirm("Eliminar este bloco?")) return;
+      
+      const plan = state.weekState.plan;
+      if (!plan || !plan.days || !plan.days[activeBlockDayKey]) return;
+      
+      const blocks = plan.days[activeBlockDayKey].blocks || [];
+      plan.days[activeBlockDayKey].blocks = blocks.filter((_, idx) => idx !== activeBlockIdx);
+      
+      closeBlockModal();
+      renderActiveTab();
+      await saveCloudWeekState();
+      showToast("🗑️ Bloco eliminado!");
+    };
+
+    // Manual Block Addition
+    window.openAddBlockModal = function() {
+      const dayKeysArray = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+      activeBlockDayKey = dayKeysArray[state.selectedDayIndex];
+      $("add-block-title").value = "";
+      $("add-block-modal").classList.remove("hidden");
+    };
+    window.closeAddBlockModal = function() {
+      $("add-block-modal").classList.add("hidden");
+    };
+    window.addBlock = async function() {
+      const title = $("add-block-title").value.trim();
+      const time = $("add-block-time").value;
+      const dur = Number($("add-block-dur").value);
+      const type = $("add-block-type").value;
+
+      if (!title) {
+        alert("Preencha o título!");
+        return;
+      }
+
+      if (!state.weekState.plan) {
+        state.weekState.plan = { days: { mon: {blocks:[]}, tue: {blocks:[]}, wed: {blocks:[]}, thu: {blocks:[]}, fri: {blocks:[]}, sat: {blocks:[]}, sun: {blocks:[]} } };
+      }
+      if (!state.weekState.plan.days) {
+        state.weekState.plan.days = { mon: {blocks:[]}, tue: {blocks:[]}, wed: {blocks:[]}, thu: {blocks:[]}, fri: {blocks:[]}, sat: {blocks:[]}, sun: {blocks:[]} };
+      }
+      if (!state.weekState.plan.days[activeBlockDayKey]) {
+        state.weekState.plan.days[activeBlockDayKey] = { blocks: [] };
+      }
+
+      state.weekState.plan.days[activeBlockDayKey].blocks.push({ title, time, duration: dur, type });
+      state.weekState.plan.days[activeBlockDayKey].blocks.sort((a,b) => a.time.localeCompare(b.time));
+
+      closeAddBlockModal();
+      renderActiveTab();
+      await saveCloudWeekState();
+      showToast("✅ Bloco adicionado!");
+    };
+
+    // ────────────────────────────────────────────────────────────────────────
+    // TAB 2: SEMANA (Weekly Navigation & Shift Management & Gemini Generator)
+    // ────────────────────────────────────────────────────────────────────────
+    function renderSemanaTab(container) {
+      const currentMonday = new Date(state.weekStr);
+      const sundayDate = new Date(currentMonday);
+      sundayDate.setDate(sundayDate.getDate() + 6);
+      
+      const days = getWeekDays(state.weekStr);
+      const now = new Date();
+
+      // Calculate total weekly hours sum
+      let totalHours = 0;
+      let totalTurns = 0;
+      DAY_KEYS.forEach(k => {
+        const shId = state.weekState.shifts?.[k] || "F";
+        const sh = state.config.shiftTypes.find(s => s.id === shId);
+        if (sh) {
+          totalHours += sh.hours;
+          if (sh.id !== "F") {
+            totalTurns++;
+          }
+        }
+      });
+      const loadDetails = getLoadLabel(totalHours);
+
+      const selectedDayKey = DAY_KEYS[state.selectedDayIndex];
+      const selectedDayCalendarDate = days[state.selectedDayIndex];
+      const selectedActiveShiftId = state.weekState.shifts?.[selectedDayKey] || "F";
+      const selectedActiveShift = state.config.shiftTypes.find(s => s.id === selectedActiveShiftId) || { name: "Folga", color: "#555452", notes: "Dia de Folga", start: "00:00", home: "00:00", hours: 0 };
+      const selectedDayBlocks = state.weekState.plan?.days?.[selectedDayKey]?.blocks || [];
+
+      // Check current exportType, default to shifts
+      if (!state.exportType) state.exportType = "shifts";
+      // Check if showTutorial flag exists
+      if (state.showTutorial === undefined) state.showTutorial = false;
+
+      let html = `
+        <!-- Week navigation header -->
+        <div class="flex items-center justify-between bg-neutral-900/40 p-3 rounded-2xl border border-white/[0.03]">
+          <div class="flex gap-1.5">
+            <button onclick="navigateWeek(-7)" class="p-2 hover:bg-neutral-800 rounded-xl transition text-neutral-400 hover:text-white" aria-label="Semana anterior">
+              <i class="ti ti-chevron-left text-base"></i>
+            </button>
+            <button onclick="goTodayWeekTab()" class="px-3 py-1 bg-[#0A84FF]/10 border border-[#0A84FF]/20 hover:bg-[#0A84FF]/20 rounded-xl text-[11px] font-extrabold text-[#0A84FF] transition">
+              Hoje
+            </button>
+            <button onclick="navigateWeek(7)" class="p-2 hover:bg-neutral-800 rounded-xl transition text-neutral-400 hover:text-white" aria-label="Próxima semana">
+              <i class="ti ti-chevron-right text-base"></i>
+            </button>
+          </div>
+          <button onclick="generatePlanAI()" class="px-3.5 py-2 bg-accent hover:bg-accentHover text-white text-[11px] font-black rounded-xl shadow-md transition flex items-center gap-1.5 animate-pulse shrink-0">
+            <i class="ti ti-sparkles text-xs"></i>
+            <span>Gerar Plano IA</span>
+          </button>
+        </div>
+
+        <!-- Weekly summary metrics card -->
+        <div class="bg-cardBg p-4 rounded-3xl border border-white/[0.04] flex items-center justify-between shadow-lg relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-16 h-16 bg-[#0A84FF]/5 rounded-full blur-xl pointer-events-none"></div>
+          <div class="space-y-1">
+            <span class="text-[9px] uppercase font-black text-neutral-500 tracking-wider">Carga Semanal Estimada</span>
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-base font-black text-white">${totalHours}h trabalho</span>
+              <span class="text-[9px] text-neutral-500 font-bold font-mono">(${totalTurns} turnos)</span>
+            </div>
+          </div>
+          <div class="px-2.5 py-1 rounded-lg font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5 border" style="background-color: ${loadDetails.color}15; border-color: ${loadDetails.color}25; color: ${loadDetails.color}">
+            <span class="w-1.5 h-1.5 rounded-full animate-ping" style="background-color: ${loadDetails.color}"></span>
+            <span>${loadDetails.label}</span>
+          </div>
+        </div>
+
+        <!-- Compact Weekly Calendar Selector -->
+        <div class="space-y-2">
+          <span class="text-[10px] uppercase font-black tracking-widest text-neutral-400 block pl-1">Calendário Semanal (Compacto)</span>
+          <div class="grid grid-cols-7 gap-1 bg-cardBg p-1.5 rounded-2xl border border-white/[0.04] shadow-md">
+            ${DAY_KEYS.map((dayK, index) => {
+              const calendarDay = days[index];
+              const isToday = calendarDay.toDateString() === now.toDateString();
+              const activeShiftId = state.weekState.shifts?.[dayK] || "F";
+              const shiftOfThisDay = state.config.shiftTypes.find(s => s.id === activeShiftId);
+              const isSelected = state.selectedDayIndex === index;
+
+              return `
+                <button onclick="selectSemanaDay(${index})" class="relative py-2.5 rounded-xl flex flex-col items-center justify-between transition-all duration-150 group border ${
+                  isSelected
+                    ? "bg-[#0A84FF]/10 border-[#0A84FF] text-[#0A84FF] shadow-sm shadow-[#0A84FF]/15"
+                    : isToday
+                    ? "bg-neutral-800 border-white/[0.08] text-white"
+                    : "bg-black/30 border-transparent text-neutral-400 hover:bg-neutral-850 hover:text-white"
+                }">
+                  <span class="text-[9px] uppercase font-black tracking-wider block opacity-70 mb-0.5">${DAYS_SHORT[index]}</span>
+                  <span class="text-xs font-black transition-all ${isSelected ? "scale-110" : ""}">${calendarDay.getDate()}</span>
+                  
+                  <div class="mt-1.5 h-4 flex items-center justify-center">
+                    ${shiftOfThisDay && shiftOfThisDay.id !== "F" ? `
+                      <span class="w-3.5 h-3.5 rounded text-[7px] font-black flex items-center justify-center text-white" style="background-color: ${shiftOfThisDay.color || '#0A84FF'}">
+                        ${(!shiftOfThisDay.name || shiftOfThisDay.name === 'undefined') ? (shiftOfThisDay.id || '?') : shiftOfThisDay.name}
+                      </span>
+                    ` : `
+                      <span class="w-1 h-1 rounded-full bg-neutral-700 block"></span>
+                    `}
+                  </div>
+                  
+                  ${isToday && !isSelected ? `
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-[#0A84FF] border border-darkBg rounded-full"></span>
+                  ` : ""}
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </div>
+
+        <!-- TARGET DAY DETAILS - PREMIUM INTERACTIVE PANEL -->
+        <div class="bg-cardBg p-4 rounded-3xl border border-white/[0.04] shadow-xl space-y-4">
+          <!-- Card Header -->
+          <div class="flex justify-between items-center border-b border-white/[0.04] pb-2.5">
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="w-1.5 h-3 bg-[#0A84FF] rounded-full"></span>
+                <h3 class="text-xs font-black text-white">${DAYS_PT[state.selectedDayIndex]}</h3>
+              </div>
+              <span class="text-[9px] text-neutral-500 font-bold font-mono ml-3.5 mt-0.5">
+                ${selectedDayCalendarDate.getDate()} de ${selectedDayCalendarDate.toLocaleString("pt-PT", { month: "long" })} de ${selectedDayCalendarDate.getFullYear()}
+              </span>
+            </div>
+            ${selectedDayCalendarDate.toDateString() === now.toDateString() ? `
+              <span class="text-[8px] uppercase font-black tracking-widest text-[#0A84FF] bg-[#0A84FF]/10 px-2 py-0.5 rounded-md border border-[#0A84FF]/20 animate-pulse">Hoje</span>
+            ` : `
+              <span class="text-[8px] uppercase font-black tracking-widest text-neutral-400 bg-neutral-800 px-2 py-0.5 rounded-md border border-white/[0.04]">Dia ${state.selectedDayIndex + 1}</span>
+            `}
+          </div>
+
+          <!-- Quick Selection of Shift - Grid of Buttons -->
+          <div class="space-y-1.5">
+            <span class="text-[9px] uppercase font-black tracking-widest text-neutral-500 block pl-1">Seleccionar Turno do Dia</span>
+            <div class="grid grid-cols-4 gap-1.5">
+              ${state.config.shiftTypes.map(s => {
+                const isSelectedShift = selectedActiveShiftId === s.id;
+                return `
+                  <button onclick="setDayShift('${selectedDayKey}', '${s.id}')" class="py-2 px-1 rounded-xl border flex flex-col items-center justify-center transition-all duration-150 ${
+                    isSelectedShift
+                      ? "bg-black text-white scale-[1.02] shadow-md"
+                      : "bg-neutral-900/60 border-transparent text-neutral-400 hover:bg-neutral-800 hover:text-white"
+                  }" style="${isSelectedShift ? `border-color: ${s.color}; box-shadow: 0 1px 6px -1px ${s.color}25` : ''}">
+                    <div class="flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${s.color}"></span>
+                      <span class="text-[10px] font-black">${(!s.name || s.name === 'undefined') ? (s.id || '?') : s.name}</span>
+                    </div>
+                    ${s.id !== "F" ? `
+                      <span class="text-[8px] text-neutral-500 font-extrabold font-mono mt-0.5">${s.hours}h</span>
+                    ` : ""}
+                  </button>
+                `;
+              }).join("")}
+            </div>
+          </div>
+
+          <!-- Info Banner about Selected Shift -->
+          <div class="bg-neutral-900/60 p-3 rounded-2xl border border-white/[0.03] flex items-center justify-between text-[11px]">
+            <div class="flex items-center gap-2 text-neutral-300">
+              <span class="w-2 h-2 rounded-full" style="background-color: ${selectedActiveShift.color || '#555452'}"></span>
+              <div class="font-bold font-sans">
+                ${selectedActiveShift.notes || (selectedActiveShift.id === "F" ? "Dia de Folga" : `Turno ${(!selectedActiveShift.name || selectedActiveShift.name === 'undefined') ? (selectedActiveShift.id || '?') : selectedActiveShift.name}`)}
+              </div>
+            </div>
+            ${selectedActiveShift.id !== "F" ? (() => {
+              const startT = (selectedActiveShift.start && selectedActiveShift.start !== 'undefined') ? selectedActiveShift.start : '';
+              const homeT = (selectedActiveShift.home && selectedActiveShift.home !== 'undefined') ? selectedActiveShift.home : '';
+              if (!startT && !homeT) return '';
+              return `
+                <span class="text-[9px] text-neutral-400 font-extrabold font-mono bg-black/40 px-2 py-0.5 rounded-md border border-white/[0.02]">
+                  ${startT ? `${startT}h` : ''}${startT && homeT ? ' às ' : ''}${homeT ? `${homeT}h` : ''}
+                </span>
+              `;
+            })() : ""}
+          </div>
+
+          <!-- IA Plans details list for selected day -->
+          <div class="space-y-2.5 pt-1">
+            <span class="text-[9px] uppercase font-black tracking-widest text-[#0A84FF] block pl-1">Atividades do Plano Inteligente (${selectedDayBlocks.length})</span>
+            
+            ${selectedDayBlocks.length > 0 ? `
+              <div class="space-y-1.5 max-h-[190px] overflow-y-auto pr-1 custom-scrollbar">
+                ${selectedDayBlocks.map((block, bIdx) => `
+                  <div class="flex gap-2.5 items-center bg-neutral-900/50 p-2.5 rounded-xl border border-white/[0.02] hover:bg-neutral-800/40 transition">
+                    <i class="ti ti-clock text-neutral-500 text-xs shrink-0"></i>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[11px] font-bold text-white truncate">${block.title}</div>
+                      <div class="flex items-center gap-1 text-[8px] text-[#0A84FF] font-black font-mono mt-0.5 uppercase tracking-wide">
+                        <span>${block.duration} MIN</span>
+                        <span>•</span>
+                        <span class="text-neutral-500">${block.type}</span>
+                      </div>
+                    </div>
+                    <span class="text-[9px] font-black font-mono bg-black px-1.5 py-0.5 rounded border border-white/[0.04] text-neutral-300">
+                      ${block.time}
+                    </span>
+                  </div>
+                `).join("")}
+              </div>
+            ` : `
+              <div class="text-center py-5 bg-neutral-900/20 border border-dashed border-white/[0.06] rounded-2xl text-neutral-500">
+                <i class="ti ti-layers-subtract text-lg mx-auto mb-1 opacity-40 block"></i>
+                <h4 class="text-[11px] font-bold text-neutral-400 mb-0.5">Sem plano IA ativo para este dia</h4>
+                <p class="text-[9px] text-neutral-500 max-w-[190px] mx-auto leading-normal">
+                  Gere o plano semanal IA no topo para organizar automaticamente as suas rotinas, sono e hábitos.
+                </p>
+              </div>
+            `}
+          </div>
+        </div>
+
+        <!-- EXPORT TO CALENDAR (.ICS) CARD -->
+        <div class="bg-cardBg p-4 rounded-3xl border border-white/[0.04] shadow-xl space-y-3.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="ti ti-calendar-plus text-base text-[#0A84FF]"></i>
+              <h3 class="text-xs font-black text-white">Exportar para o Calendário</h3>
+            </div>
+            <button onclick="toggleTutorial()" class="p-1 hover:bg-neutral-800 rounded-lg text-neutral-400 hover:text-neutral-200 transition" title="Ajuda">
+              <i class="ti ti-help text-sm"></i>
+            </button>
+          </div>
+
+          <p class="text-[10px] text-neutral-400 leading-normal">
+            Sincronize os seus turnos e hábitos com a app Calendário do seu iPhone, Google Agenda, ou Microsoft Outlook.
+          </p>
+
+          <!-- Export Type Selector -->
+          <div class="space-y-2.5">
+            <div class="grid grid-cols-2 gap-1.5 bg-black/40 p-1 rounded-xl">
+              <button onclick="setExportType('shifts')" class="py-1 rounded-lg text-[9px] font-black uppercase transition ${state.exportType === "shifts" ? "bg-neutral-800 text-[#0A84FF] border border-white/[0.04] shadow" : "text-neutral-500 hover:text-neutral-300"}">
+                Apenas Turnos
+              </button>
+              <button onclick="setExportType('all')" class="py-1 rounded-lg text-[9px] font-black uppercase transition ${state.exportType === "all" ? "bg-neutral-800 text-[#0A84FF] border border-white/[0.04] shadow" : "text-neutral-500 hover:text-neutral-300"}">
+                Turnos + Planos IA
+              </button>
+            </div>
+
+            <button onclick="downloadICS(state.exportType)" class="w-full py-2.5 bg-[#0A84FF] hover:bg-blue-600 text-white text-[11px] font-black rounded-2xl transition shadow-lg flex items-center justify-center gap-1.5">
+              <i class="ti ti-download"></i>
+              <span>Descarregar ficheiro .ics</span>
+            </button>
+          </div>
+
+          <!-- Collapsible Tutorial -->
+          <div id="tutorial-panel" class="${state.showTutorial ? '' : 'hidden'} border-t border-white/[0.04] pt-3 space-y-2.5">
+            <div class="flex gap-1.5 text-[11px] text-neutral-350 font-bold">
+              <i class="ti ti-info-circle text-xs text-[#0A84FF]"></i>
+              <span>Como importar nos seus dispositivos:</span>
+            </div>
+            <ol class="space-y-2 text-[9.5px] text-neutral-400 list-decimal pl-4.5 leading-normal">
+              <li><strong class="text-white">Descarregar:</strong> Toque no botão acima para transferir o ficheiro do calendário.</li>
+              <li><strong class="text-white">No iPhone / iPad / Mac:</strong> Toque no ficheiro descarregado nos ficheiros. O sistema importará automaticamente tudo para a sua app Calendário oficial do iOS.</li>
+              <li><strong class="text-white">No Google Agenda / Outlook:</strong> Abra a versão web do calendário num computador, vá a Definições → Importar/Exportar e envie o ficheiro descarregado para sincronizar.</li>
+            </ol>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    window.selectSemanaDay = function(idx) {
+      state.selectedDayIndex = idx;
+      renderActiveTab();
+    };
+
+    window.goTodayWeekTab = async function() {
+      state.weekStr = getMonday(new Date());
+      const now = new Date();
+      let todayIdx = now.getDay() - 1; // Mon=0, Tue=1... Sun=6
+      if (todayIdx < 0) todayIdx = 6; // Sunday
+      state.selectedDayIndex = todayIdx;
+
+      // Load today's week data
+      state.weekState = loadLocal(`alex_week_v3_${state.weekStr}`, {
+        shifts: { mon: "F", tue: "F", wed: "F", thu: "F", fri: "F", sat: "F", sun: "F" },
+        plan: null,
+        checked: {},
+        blockStatuses: {}
+      });
+      await loadCloudWeekState(state.weekStr);
+      await loadHistoryAndMetrics();
+      renderActiveTab();
+    };
+
+    window.toggleTutorial = function() {
+      state.showTutorial = !state.showTutorial;
+      renderActiveTab();
+    };
+
+    window.setExportType = function(type) {
+      state.exportType = type;
+      renderActiveTab();
+    };
+
+    window.downloadICS = function(typeOfExport) {
+      const days = getWeekDays(state.weekStr);
+      let icsLines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Alex Planeador//Semana App//PT",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH"
+      ];
+
+      const formatICSDate = (date) => {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const dd = String(date.getDate()).padStart(2, "0");
+        const hh = String(date.getHours()).padStart(2, "0");
+        const min = String(date.getMinutes()).padStart(2, "0");
+        const ss = String(date.getSeconds()).padStart(2, "0");
+        return `${yyyy}${mm}${dd}T${hh}${min}${ss}`;
+      };
+
+      const nowStamp = formatICSDate(new Date());
+
+      DAY_KEYS.forEach((dayKey, index) => {
+        const dayDate = days[index];
+
+        // 1. Shift export
+        const shiftId = state.weekState.shifts?.[dayKey] || "F";
+        const shift = state.config.shiftTypes.find((s) => s.id === shiftId);
+        if (shift && shift.id !== "F") {
+          try {
+            const [shH, shM] = (shift.start || "08:00").split(":").map(Number);
+            const startD = new Date(dayDate);
+            startD.setHours(shH, shM, 0, 0);
+
+            const endD = new Date(startD);
+            endD.setMinutes(endD.getMinutes() + Math.round((shift.hours || 8) * 60));
+
+            icsLines.push("BEGIN:VEVENT");
+            icsLines.push(`UID:shift-${state.weekStr}-${dayKey}-${shiftId}@planeador.alex`);
+            icsLines.push(`DTSTAMP:${nowStamp}`);
+            icsLines.push(`DTSTART:${formatICSDate(startD)}`);
+            icsLines.push(`DTEND:${formatICSDate(endD)}`);
+            icsLines.push(`SUMMARY:Turno: ${shift.name} ${shift.notes ? `(${shift.notes})` : ""}`);
+            icsLines.push(`DESCRIPTION:Horário: ${shift.start}h às ${shift.home}h. Adicionado via planeador Alex.`);
+            icsLines.push("END:VEVENT");
+          } catch (e) {
+            console.warn("Error exporting shift event:", e);
+          }
+        }
+
+        // 2. IA Activities export
+        if (typeOfExport === "all") {
+          const dayBlocks = state.weekState.plan?.days?.[dayKey]?.blocks || [];
+          dayBlocks.forEach((block, bIdx) => {
+            try {
+              const [blH, blM] = (block.time || "09:00").split(":").map(Number);
+              const startD = new Date(dayDate);
+              startD.setHours(blH, blM, 0, 0);
+
+              const endD = new Date(startD);
+              endD.setMinutes(endD.getMinutes() + Number(block.duration || 30));
+
+              icsLines.push("BEGIN:VEVENT");
+              icsLines.push(`UID:block-${state.weekStr}-${dayKey}-${bIdx}@planeador.alex`);
+              icsLines.push(`DTSTAMP:${nowStamp}`);
+              icsLines.push(`DTSTART:${formatICSDate(startD)}`);
+              icsLines.push(`DTEND:${formatICSDate(endD)}`);
+              icsLines.push(`SUMMARY:${block.title}`);
+              icsLines.push(`DESCRIPTION:Atividade de ${block.duration}min do plano semanal IA de categoria ${block.type}.`);
+              icsLines.push("END:VEVENT");
+            } catch (e) {
+              console.warn("Error exporting block event:", e);
+            }
+          });
+        }
+      });
+
+      icsLines.push("END:VCALENDAR");
+
+      const icsString = icsLines.join("\r\n");
+      const blob = new Blob([icsString], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `planeador_semana_${state.weekStr}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("📅 Calendário .ics descarregado!");
+    };
+
+    window.navigateWeek = async function(daysOffset) {
+      const curMon = new Date(state.weekStr);
+      curMon.setDate(curMon.getDate() + daysOffset);
+      state.weekStr = curMon.toISOString().split("T")[0];
+      
+      // Load selected week data
+      state.weekState = loadLocal(`alex_week_v3_${state.weekStr}`, {
+        shifts: { mon: "F", tue: "F", wed: "F", thu: "F", fri: "F", sat: "F", sun: "F" },
+        plan: null,
+        checked: {},
+        blockStatuses: {}
+      });
+      await loadCloudWeekState(state.weekStr);
+      await loadHistoryAndMetrics();
+      renderActiveTab();
+    };
+
+    window.setDayShift = async function(dayKey, shiftId) {
+      if (!state.weekState.shifts) state.weekState.shifts = {};
+      state.weekState.shifts[dayKey] = shiftId;
+      renderActiveTab();
+      await saveCloudWeekState();
+    };
+
+    // ────────────────────────────────────────────────────────────────────────
+    // GEMINI PROMPT ENGINE & JSON PLAN GENERATOR
+    // ────────────────────────────────────────────────────────────────────────
+    window.generatePlanAI = async function() {
+      const apiKey = state.config.geminiKey.trim();
+      if (!apiKey) {
+        alert("Chave Gemini API ausente! Por favor insira a chave na aba 'Config'.");
+        switchTab("config");
+        return;
+      }
+
+      $("ai-loader").classList.remove("hidden");
+      $("loader-text").innerText = "A compilar restrições e turnos semanais...";
+
+      // Build context parameters
+      const shiftScheduleInfo = DAY_KEYS.map((k, i) => {
+        const shId = state.weekState.shifts?.[k] || "F";
+        const shObj = state.config.shiftTypes.find(s => s.id === shId) || { name: "Folga", start: "00:00", hours: 0, home: "00:00" };
+        return `${DAYS_PT[i]} (${k}): Turno ${shObj.name} das ${shObj.start} com ${shObj.hours}h de trabalho (Chega a casa às ${shObj.home})`;
+      }).join("\n");
+
+      const pendingBacklog = state.backlog
+        .filter(b => b.status !== "done")
+        .map(b => `- [${b.priority.toUpperCase()}] ${b.title} (${b.category}) ${b.deadline ? `prazo: ${b.deadline}` : ""}`)
+        .join("\n");
+
+      const flexTasksList = state.config.flexTasks
+        .map(f => `- ${f.name} (${f.freq}x/semana, ${f.dur}min cada, preferência: ${f.pref})`)
+        .join("\n");
+
+      const systemRulesAndConstraints = `
+Você é o assistente inteligente de planeamento diário do Alex. Crie uma rotina ideal de 24h para cada dia da semana considerando estritamente as regras de saúde e turnos:
+1. Turnos de Trabalho: Os blocos de trabalho devem obedecer às horas fornecidas. Alex chega a casa na hora "home". Nenhuma atividade ou ginásio deve ocorrer durante as horas de turno ou deslocação.
+2. Hábitos de Sono Circadiano: Alex precisa de dormir idealmente de 7.5h a 8.5h por noite. Alinhe o sono com os ciclos naturais de 90 minutos (e.g. 7.5h é ideal). Evite deitar demasiado tarde após turnos noturnos.
+3. Tarefas Flexíveis semanais: Tente agendar o número solicitado de sessões semanais para as tarefas indicadas (Ginásio, Leitura, Meditação, Diário, Gaming, Stream, Namorada).
+   - Se o turno é de manhã (M, MI, MIT), as atividades livres devem ocorrer ao fim da tarde ou noite.
+   - Se o turno é de tarde (T, IT), agende atividades como Ginásio e Meditação na parte da manhã.
+   - Dias de Folga (F) são perfeitos para mais atividades de lazer prolongadas, namorada e descompressão.
+4. Refeições: Agende blocos para Pequeno-almoço, Almoço e Jantar ao longo do dia, adaptados ao turno ativo.
+5. Backlog: Distribua algumas das tarefas pendentes urgentes ou prioritárias ao longo dos dias livres ou menos ocupados.
+
+O seu output deve ser estritamente em formato JSON puro, sem formatação markdown extra, sem blocos de código com a palavra "json". O JSON deve respeitar o seguinte esquema exato:
+{
+  "days": {
+    "mon": {
+      "blocks": [
+        {"title": "Sono / Descanso", "time": "00:00", "duration": 450, "type": "sleep"},
+        {"title": "Pequeno-almoço", "time": "08:00", "duration": 30, "type": "meal"},
+        {"title": "Trabalho (Turno M)", "time": "07:15", "duration": 330, "type": "work"}
+      ]
+    },
+    "tue": { ... },
+    "wed": { ... },
+    "thu": { ... },
+    "fri": { ... },
+    "sat": { ... },
+    "sun": { ... }
   }
-  document.getElementById('modal-bg').classList.remove('open');editingId=null;editingType=null;
-};
+}
+Ordene os blocos cronologicamente por hora de início ("time"). Retorne apenas o objeto JSON válido.
+      `;
 
-function renderAll(){updateWeekHeader();renderDays();renderHoje();}
-loadAll();
-</script>
+      const promptUser = `
+Turnos Definidos:
+${shiftScheduleInfo}
+
+Hábitos e Preferências de Atividades Flexíveis:
+${flexTasksList}
+
+Itens Relevantes do Backlog a Integrar:
+${pendingBacklog}
+      `;
+
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: systemRulesAndConstraints + "\n\n" + promptUser }]
+            }],
+            generationConfig: {
+              responseMimeType: "application/json"
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const errMsg = await response.text();
+          throw new Error(`Erro na API Gemini: ${response.status} - ${errMsg}`);
+        }
+
+        const resData = await response.json();
+        const jsonText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!jsonText) throw new Error("A API Gemini não retornou texto válido.");
+
+        // Clean potentially remaining markdown wrap
+        let cleanedJson = jsonText.trim();
+        if (cleanedJson.startsWith("```json")) cleanedJson = cleanedJson.substring(7);
+        if (cleanedJson.endsWith("```")) cleanedJson = cleanedJson.substring(0, cleanedJson.length - 3);
+
+        const parsedPlan = JSON.parse(cleanedJson.trim());
+        
+        state.weekState.plan = parsedPlan;
+        state.weekState.checked = {};
+        state.weekState.blockStatuses = {};
+
+        await saveCloudWeekState();
+        showToast("✨ Plano Semanal Gerado com Sucesso!");
+      } catch (err) {
+        console.error(err);
+        alert(`Ocorreu um erro ao gerar o plano: ${err.message}`);
+      } finally {
+        $("ai-loader").classList.add("hidden");
+        renderActiveTab();
+      }
+    };
+
+    // ────────────────────────────────────────────────────────────────────────
+    // TAB 3: BACKLOG (To-Do & Category lists)
+    // ────────────────────────────────────────────────────────────────────────
+    function renderBacklogTab(container) {
+      // Create relative date indicator
+      const getDaysDiff = (deadlineStr) => {
+        if (!deadlineStr) return null;
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const deadlineDate = new Date(deadlineStr);
+        deadlineDate.setHours(0,0,0,0);
+        const diffTime = deadlineDate.getTime() - today.getTime();
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      };
+
+      const getUrgencyScore = (item) => {
+        if (item.status === "done") return -1000;
+        let score = 0;
+        if (item.priority === "alta") score += 100;
+        if (item.priority === "normal") score += 50;
+        if (item.priority === "baixa") score += 10;
+        
+        const diffDays = getDaysDiff(item.deadline);
+        if (diffDays !== null) {
+          if (diffDays < 0) score += 300;
+          else if (diffDays === 0) score += 250;
+          else if (diffDays === 1) score += 180;
+          else if (diffDays <= 3) score += 100;
+          else if (diffDays <= 7) score += 40;
+        }
+        return score;
+      };
+
+      // Filter
+      let filtered = state.backlog;
+      if (state.backlogFilter !== "all") {
+        if (state.backlogFilter === "urgent") {
+          filtered = state.backlog.filter(b => {
+            if (b.status === "done") return false;
+            if (b.priority === "alta") return true;
+            const diff = getDaysDiff(b.deadline);
+            return diff !== null && diff <= 2;
+          });
+        } else {
+          filtered = state.backlog.filter(b => b.category === state.backlogFilter);
+        }
+      }
+
+      // Sort
+      const sorted = [...filtered].sort((a,b) => {
+        if (a.status !== b.status) return a.status === "done" ? 1 : -1;
+        if (a.status === "done") return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        
+        if (state.backlogSort === "priority") {
+          const scoreA = getUrgencyScore(a);
+          const scoreB = getUrgencyScore(b);
+          if (scoreA !== scoreB) return scoreB - scoreA;
+        } else if (state.backlogSort === "deadline") {
+          if (!a.deadline) return 1;
+          if (!b.deadline) return -1;
+          return a.deadline.localeCompare(b.deadline);
+        }
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      });
+
+      let html = `
+        <!-- Form Addition -->
+        <form id="backlog-form" onsubmit="addBacklogItem(event)" class="bg-cardBg p-4 rounded-3xl border border-white/[0.04] space-y-3.5 shadow-lg">
+          <h3 class="text-xs font-black uppercase text-neutral-400 tracking-wider">Adicionar ao Backlog</h3>
+          <div class="space-y-3">
+            <input type="text" id="backlog-title" placeholder="Nome do item..." required class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2.5 px-3.5 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-accent transition">
+            
+            <div class="grid grid-cols-2 gap-2">
+              <select id="backlog-cat" class="bg-neutral-900 border border-white/[0.04] rounded-xl py-2.5 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+                ${BACKLOG_CATEGORIES.map(c => `<option value="${c.key}">${c.emoji} ${c.label}</option>`).join("")}
+              </select>
+              <select id="backlog-prio" class="bg-neutral-900 border border-white/[0.04] rounded-xl py-2.5 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+                <option value="baixa">🟢 Prioridade Baixa</option>
+                <option value="normal" selected>🟡 Prioridade Normal</option>
+                <option value="alta">🔴 Prioridade Alta</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <div class="flex-1">
+                <label class="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Prazo de Conclusão</label>
+                <input type="date" id="backlog-deadline" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-neutral-200 focus:outline-none focus:border-accent">
+              </div>
+              <button type="submit" class="bg-accent hover:bg-accentHover text-white px-5 py-2.5 rounded-xl text-xs font-extrabold transition mt-4 self-end shrink-0 shadow-md">Criar Item</button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Category Horizontal Filter Pills -->
+        <div class="space-y-2">
+          <h3 class="text-xs font-black uppercase text-neutral-400 tracking-wider">Filtrar por Categoria</h3>
+          <div class="flex gap-1.5 overflow-x-auto pb-1.5 custom-scrollbar">
+            <button onclick="setBacklogFilter('all')" class="text-[10px] font-extrabold px-3 py-1.5 rounded-full border transition shrink-0 ${
+              state.backlogFilter === "all" ? "bg-accent border-accent text-white" : "bg-cardBg border-white/[0.03] text-neutral-400"
+            }">📂 Todos</button>
+            <button onclick="setBacklogFilter('urgent')" class="text-[10px] font-extrabold px-3 py-1.5 rounded-full border transition shrink-0 ${
+              state.backlogFilter === "urgent" ? "bg-red-500/10 border-red-500/30 text-red-400 font-black animate-pulse" : "bg-cardBg border-white/[0.03] text-neutral-400"
+            }">🚨 Urgentes</button>
+            ${BACKLOG_CATEGORIES.map(c => `
+              <button onclick="setBacklogFilter('${c.key}')" class="text-[10px] font-extrabold px-3 py-1.5 rounded-full border transition shrink-0 ${
+                state.backlogFilter === c.key ? "bg-accent border-accent text-white" : "bg-cardBg border-white/[0.03] text-neutral-400"
+              }">${c.emoji} ${c.label}</button>
+            `).join("")}
+          </div>
+        </div>
+
+        <!-- Sorting selector -->
+        <div class="flex justify-between items-center bg-[#141413]/60 px-3 py-2 rounded-xl border border-white/[0.02]">
+          <span class="text-[10px] font-bold text-neutral-500">Ordenação</span>
+          <div class="flex gap-2">
+            <button onclick="setBacklogSort('priority')" class="text-[10px] font-black ${state.backlogSort === 'priority' ? 'text-accent' : 'text-neutral-500' }">⚡ Prioridade</button>
+            <span class="text-neutral-800">|</span>
+            <button onclick="setBacklogSort('deadline')" class="text-[10px] font-black ${state.backlogSort === 'deadline' ? 'text-accent' : 'text-neutral-500' }">📅 Prazo</button>
+          </div>
+        </div>
+
+        <!-- Backlog list -->
+        <div class="space-y-2">
+          ${sorted.length > 0 ? sorted.map(item => {
+            const isDone = item.status === "done";
+            const diffDays = getDaysDiff(item.deadline);
+
+            let borderStyle = "border-white/[0.04]";
+            let badgeHtml = "";
+            let priorityDotColor = "bg-neutral-500";
+
+            if (item.priority === "alta") priorityDotColor = "bg-red-500 animate-ping";
+            else if (item.priority === "normal") priorityDotColor = "bg-amber-500";
+            else if (item.priority === "baixa") priorityDotColor = "bg-emerald-500";
+
+            if (!isDone && diffDays !== null) {
+              if (diffDays < 0) {
+                borderStyle = "border-red-500/20 bg-red-500/[0.01]";
+                badgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-red-500/10 text-red-400 border border-red-500/20">ATRASO (${Math.abs(diffDays)}d)</span>`;
+              } else if (diffDays === 0) {
+                borderStyle = "border-amber-500/20 bg-amber-500/[0.01]";
+                badgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20">HOJE ⌛</span>`;
+              } else if (diffDays === 1) {
+                borderStyle = "border-orange-500/15";
+                badgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/15">AMANHÃ</span>`;
+              } else {
+                badgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-neutral-900 text-neutral-400 border border-white/[0.02]">Faltam ${diffDays}d</span>`;
+              }
+            }
+
+            return `
+              <div class="flex items-center gap-3 p-3.5 bg-cardBg rounded-2xl border transition hover:border-neutral-800 ${borderStyle} ${isDone ? 'opacity-35' : ''}">
+                <div class="w-2.5 h-2.5 rounded-full ${priorityDotColor} shrink-0"></div>
+                
+                <div onclick="toggleBacklogStatus('${item.id}', '${item.status || 'pending'}')" class="w-5 h-5 rounded-lg border-2 flex items-center justify-center cursor-pointer shrink-0 transition ${
+                  isDone ? "bg-accent border-accent text-white" : "border-neutral-700 hover:border-neutral-500"
+                }">
+                  ${isDone ? '<i class="ti ti-check text-[10px] font-black"></i>' : ""}
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-xs font-extrabold text-neutral-100 truncate ${isDone ? 'line-through text-neutral-500' : ''}">${item.title}</h4>
+                  <div class="flex flex-wrap items-center gap-1.5 mt-1 text-[9px] text-neutral-500 font-extrabold uppercase tracking-wider">
+                    <span class="text-accent">${item.category}</span>
+                    ${item.deadline ? `<span>·</span><span class="lowercase flex items-center gap-0.5"><i class="ti ti-calendar text-[10px]"></i> ${item.deadline}</span>` : ""}
+                    ${badgeHtml}
+                  </div>
+                </div>
+
+                <button onclick="deleteBacklogItem('${item.id}')" class="p-1.5 text-neutral-600 hover:text-red-400 rounded-lg transition">
+                  <i class="ti ti-trash text-sm"></i>
+                </button>
+              </div>
+            `;
+          }).join("") : `
+            <div class="text-center py-12 text-neutral-600 bg-[#141413]/30 rounded-3xl border border-white/[0.02]">
+              <i class="ti ti-folders text-3xl mb-1.5 block"></i>
+              <span class="text-xs">Nenhum item pendente encontrado neste filtro.</span>
+            </div>
+          `}
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    window.setBacklogFilter = function(filterVal) {
+      state.backlogFilter = filterVal;
+      renderActiveTab();
+    };
+
+    window.setBacklogSort = function(sortVal) {
+      state.backlogSort = sortVal;
+      renderActiveTab();
+    };
+
+    window.addBacklogItem = async function(e) {
+      e.preventDefault();
+      const title = $("backlog-title").value.trim();
+      const category = $("backlog-cat").value;
+      const priority = $("backlog-prio").value;
+      const deadline = $("backlog-deadline").value || null;
+
+      if (!title) return;
+
+      await addBacklogItemDirect(title, category, priority, deadline);
+      $("backlog-form").reset();
+    };
+
+    async function addBacklogItemDirect(title, category, priority, deadline) {
+      const newItem = {
+        title,
+        category,
+        priority,
+        deadline,
+        status: "pending",
+        createdAt: new Date().toISOString()
+      };
+
+      if (!state.isOffline && db) {
+        try {
+          const backCol = collection(db, `users/${UID}/backlog`);
+          await addDoc(backCol, newItem);
+          showToast("📋 Item adicionado ao Backlog!");
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        const id = "local_" + Date.now();
+        state.backlog.push({ id, ...newItem });
+        saveLocal("alex_backlog_v3", state.backlog);
+        renderActiveTab();
+        updateBacklogNavBadge();
+        showToast("📋 Item guardado localmente!");
+      }
+    }
+
+    window.toggleBacklogStatus = async function(id, curStatus) {
+      const nextStatus = curStatus === "done" ? "pending" : "done";
+      
+      if (!state.isOffline && db) {
+        try {
+          await updateDoc(doc(db, `users/${UID}/backlog/${id}`), { status: nextStatus });
+          showToast("💾 Backlog atualizado!");
+        } catch (e) {}
+      } else {
+        const item = state.backlog.find(b => b.id === id);
+        if (item) {
+          item.status = nextStatus;
+          saveLocal("alex_backlog_v3", state.backlog);
+          renderActiveTab();
+          updateBacklogNavBadge();
+        }
+      }
+    };
+
+    window.deleteBacklogItem = async function(id) {
+      if (!confirm("Deletar item do Backlog?")) return;
+
+      if (!state.isOffline && db) {
+        try {
+          await deleteDoc(doc(db, `users/${UID}/backlog/${id}`));
+          showToast("🗑️ Item removido!");
+        } catch (e) {}
+      } else {
+        state.backlog = state.backlog.filter(b => b.id !== id);
+        saveLocal("alex_backlog_v3", state.backlog);
+        renderActiveTab();
+        updateBacklogNavBadge();
+        showToast("🗑️ Item removido localmente!");
+      }
+    };
+
+    // ────────────────────────────────────────────────────────────────────────
+    // TAB 4: CONFIG (Key parameters, Shift definitions, Flex Tasks list)
+    // ────────────────────────────────────────────────────────────────────────
+    function renderConfigTab(container) {
+      let html = `
+        <!-- API Key & Credentials Settings -->
+        <div class="bg-cardBg p-4 rounded-3xl border border-white/[0.04] space-y-3 shadow-lg">
+          <h3 class="text-xs font-black uppercase text-neutral-400 tracking-wider">Credenciais & API</h3>
+          <div class="space-y-1.5">
+            <label class="text-[9px] uppercase font-bold text-neutral-500 block">Gemini API Key</label>
+            <div class="flex gap-2">
+              <input type="password" id="api-key-input" value="${state.config.geminiKey || ''}" placeholder="AIzaSy..." class="flex-1 bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+              <button onclick="saveGeminiKey()" class="bg-accent hover:bg-accentHover text-white text-xs font-extrabold px-4 py-2 rounded-xl transition shadow-md">Salvar</button>
+            </div>
+            <p class="text-[9px] text-neutral-500">Chave armazenada de forma segura na nuvem Firebase para uso do modelo gemini-3.5-flash.</p>
+          </div>
+        </div>
+
+        <!-- Shift Types Config list -->
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xs font-black uppercase text-neutral-400 tracking-wider">Turnos do Calendário</h3>
+            <button onclick="addNewShiftPrompt()" class="px-2.5 py-1 bg-neutral-900 border border-white/[0.04] rounded-lg text-[9px] font-extrabold text-accent flex items-center gap-1 transition">Adicionar</button>
+          </div>
+
+          <div class="space-y-2">
+            ${state.config.shiftTypes.filter(s => s.id !== "F").map((sh) => {
+              const sName = (!sh.name || sh.name === 'undefined') ? (sh.id || '?') : sh.name;
+              const sColor = (!sh.color || sh.color === 'undefined') ? '#0A84FF' : sh.color;
+              
+              const sStart = (sh.start && sh.start !== 'undefined') ? sh.start : '';
+              const sHome = (sh.home && sh.home !== 'undefined') ? sh.home : '';
+              const sHours = (sh.hours !== undefined && sh.hours !== null && String(sh.hours) !== 'undefined') ? `${sh.hours}h` : '';
+
+              let infoParts = [];
+              if (sStart) infoParts.push(`Início: ${sStart}`);
+              if (sHours) infoParts.push(`Carga: ${sHours}`);
+              if (sHome) infoParts.push(`Volta: ${sHome}`);
+              const infoText = infoParts.join(" · ") || "Sem horários definidos";
+
+              return `
+                <div class="bg-cardBg p-3 rounded-2xl border border-white/[0.03] flex items-center justify-between gap-2.5">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="px-2 py-1.5 rounded-xl flex items-center justify-center font-black text-[10px] min-w-[36px] h-7 text-center shrink-0 shadow-inner" style="background-color: ${sColor}15; color: ${sColor}">
+                      ${sName}
+                    </div>
+                    <div class="min-w-0">
+                      <span class="text-xs font-bold text-white block truncate">${sh.notes || 'Turno'}</span>
+                      <span class="text-[9px] text-neutral-500 uppercase font-extrabold tracking-wider block truncate sm:inline">${infoText}</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button onclick="editShiftPrompt('${sh.id}')" class="p-1.5 text-neutral-500 hover:text-white rounded transition"><i class="ti ti-edit text-sm"></i></button>
+                    <button onclick="deleteShift('${sh.id}')" class="p-1.5 text-neutral-500 hover:text-red-400 rounded transition"><i class="ti ti-trash text-sm"></i></button>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+
+        <!-- Flexible tasks list -->
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xs font-black uppercase text-neutral-400 tracking-wider">Hábitos & Tarefas Flexíveis</h3>
+            <button onclick="addFlexTaskPrompt()" class="px-2.5 py-1 bg-neutral-900 border border-white/[0.04] rounded-lg text-[9px] font-extrabold text-accent flex items-center gap-1 transition">Adicionar</button>
+          </div>
+
+          <div class="space-y-2">
+            ${state.config.flexTasks.map((t) => `
+              <div class="bg-cardBg p-3 rounded-2xl border border-white/[0.03] flex items-center justify-between">
+                <div>
+                  <span class="text-xs font-extrabold text-white block">${t.name}</span>
+                  <span class="text-[9px] text-neutral-500 uppercase font-extrabold tracking-wider">${t.freq}x/semana · ${t.dur} MIN · Pref: ${t.pref === 'manhã' ? 'Manhã' : 'Tarde'}</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button onclick="editFlexTaskPrompt('${t.id}')" class="p-1.5 text-neutral-500 hover:text-white rounded transition"><i class="ti ti-edit text-sm"></i></button>
+                  <button onclick="deleteFlexTask('${t.id}')" class="p-1.5 text-neutral-500 hover:text-red-400 rounded transition"><i class="ti ti-trash text-sm"></i></button>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    window.saveGeminiKey = async function() {
+      const keyInput = $("api-key-input").value.trim();
+      state.config.geminiKey = keyInput;
+      await saveCloudConfig();
+      showToast("🔑 Chave Gemini API atualizada com sucesso!");
+    };
+
+    // Shifts CRUD Modal Triggers
+    window.setShiftModalColor = function(color) {
+      $("shift-modal-color").value = color;
+      document.querySelectorAll(".shift-color-preset").forEach(btn => {
+        if (btn.getAttribute("data-color") === color) {
+          btn.style.borderColor = "white";
+          btn.style.borderWidth = "2px";
+        } else {
+          btn.style.borderColor = "rgba(255, 255, 255, 0.2)";
+          btn.style.borderWidth = "1px";
+        }
+      });
+    };
+
+    window.closeShiftConfigModal = function() {
+      $("shift-config-modal").classList.add("hidden");
+    };
+
+    window.addNewShiftPrompt = function() {
+      $("shift-modal-title").innerText = "Adicionar Turno";
+      $("shift-modal-idx").value = "";
+      $("shift-modal-id").value = "";
+      $("shift-modal-id").disabled = false;
+      $("shift-modal-name").value = "";
+      $("shift-modal-start").value = "08:00";
+      $("shift-modal-hours").value = "8";
+      $("shift-modal-home").value = "17:00";
+      $("shift-modal-notes").value = "";
+      setShiftModalColor("#0A84FF");
+      $("shift-config-modal").classList.remove("hidden");
+    };
+
+    window.editShiftPrompt = function(id) {
+      const idx = state.config.shiftTypes.findIndex(s => s.id === id);
+      const sh = state.config.shiftTypes[idx];
+      if (!sh) return;
+      $("shift-modal-title").innerText = "Editar Turno";
+      $("shift-modal-idx").value = idx;
+      $("shift-modal-id").value = sh.id;
+      $("shift-modal-id").disabled = true;
+      $("shift-modal-name").value = sh.name || "";
+      $("shift-modal-start").value = sh.start || "08:00";
+      $("shift-modal-hours").value = sh.hours ?? "8";
+      $("shift-modal-home").value = sh.home || "17:00";
+      $("shift-modal-notes").value = sh.notes || "";
+      setShiftModalColor(sh.color || "#0A84FF");
+      $("shift-config-modal").classList.remove("hidden");
+    };
+
+    window.saveShiftModal = async function() {
+      const idxStr = $("shift-modal-idx").value;
+      const id = $("shift-modal-id").value.trim();
+      const name = $("shift-modal-name").value.trim();
+      const start = $("shift-modal-start").value.trim();
+      const hours = Number($("shift-modal-hours").value);
+      const home = $("shift-modal-home").value.trim();
+      const notes = $("shift-modal-notes").value.trim();
+      const color = $("shift-modal-color").value;
+
+      if (!id || !name) {
+        alert("O ID e o Nome do Turno são obrigatórios.");
+        return;
+      }
+
+      if (idxStr === "") {
+        const exists = state.config.shiftTypes.some(s => s.id === id);
+        if (exists) {
+          alert("Já existe um turno com este ID.");
+          return;
+        }
+        state.config.shiftTypes.push({ id, name, start, hours, home, notes, color });
+      } else {
+        const idx = parseInt(idxStr, 10);
+        if (state.config.shiftTypes[idx]) {
+          state.config.shiftTypes[idx].name = name;
+          state.config.shiftTypes[idx].start = start;
+          state.config.shiftTypes[idx].hours = hours;
+          state.config.shiftTypes[idx].home = home;
+          state.config.shiftTypes[idx].notes = notes;
+          state.config.shiftTypes[idx].color = color;
+        }
+      }
+
+      await saveCloudConfig();
+      closeShiftConfigModal();
+      renderActiveTab();
+      showToast(idxStr === "" ? "✅ Turno adicionado!" : "💾 Turno editado!");
+    };
+
+    window.deleteShift = async function(id) {
+      if (!confirm("Deletar este tipo de turno?")) return;
+      state.config.shiftTypes = state.config.shiftTypes.filter(s => s.id !== id);
+      await saveCloudConfig();
+      renderActiveTab();
+      showToast("🗑️ Turno removido!");
+    };
+
+    // Flex Tasks CRUD Modal Triggers
+    window.closeFlexTaskModal = function() {
+      $("flex-task-modal").classList.add("hidden");
+    };
+
+    window.addFlexTaskPrompt = function() {
+      $("flex-modal-title").innerText = "Adicionar Hábito";
+      $("flex-modal-idx").value = "";
+      $("flex-modal-name").value = "";
+      $("flex-modal-freq").value = "3";
+      $("flex-modal-dur").value = "45";
+      $("flex-modal-pref").value = "manhã";
+      $("flex-task-modal").classList.remove("hidden");
+    };
+
+    window.editFlexTaskPrompt = function(id) {
+      const idx = state.config.flexTasks.findIndex(t => t.id === id);
+      const t = state.config.flexTasks[idx];
+      if (!t) return;
+      $("flex-modal-title").innerText = "Editar Hábito";
+      $("flex-modal-idx").value = idx;
+      $("flex-modal-name").value = t.name || "";
+      $("flex-modal-freq").value = t.freq ?? "3";
+      $("flex-modal-dur").value = t.dur ?? "45";
+      $("flex-modal-pref").value = t.pref || "manhã";
+      $("flex-task-modal").classList.remove("hidden");
+    };
+
+    window.saveFlexTaskModal = async function() {
+      const idxStr = $("flex-modal-idx").value;
+      const name = $("flex-modal-name").value.trim();
+      const freq = Number($("flex-modal-freq").value);
+      const dur = Number($("flex-modal-dur").value);
+      const pref = $("flex-modal-pref").value;
+
+      if (!name) {
+        alert("O nome do hábito é obrigatório.");
+        return;
+      }
+
+      if (idxStr === "") {
+        state.config.flexTasks.push({
+          id: "g_" + Date.now(),
+          name,
+          freq,
+          dur,
+          pref
+        });
+      } else {
+        const idx = parseInt(idxStr, 10);
+        if (state.config.flexTasks[idx]) {
+          state.config.flexTasks[idx].name = name;
+          state.config.flexTasks[idx].freq = freq;
+          state.config.flexTasks[idx].dur = dur;
+          state.config.flexTasks[idx].pref = pref;
+        }
+      }
+
+      await saveCloudConfig();
+      closeFlexTaskModal();
+      renderActiveTab();
+      showToast(idxStr === "" ? "🎯 Hábito flexível criado!" : "🎯 Hábito atualizado!");
+    };
+
+    window.deleteFlexTask = async function(id) {
+      if (!confirm("Deletar hábito flexível?")) return;
+      state.config.flexTasks = state.config.flexTasks.filter(t => t.id !== id);
+      await saveCloudConfig();
+      renderActiveTab();
+      showToast("🗑️ Hábito removido!");
+    };
+
+    // Boot execution
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+      initApp();
+    } else {
+      window.addEventListener("DOMContentLoaded", initApp);
+    }
+
+  </script>
 </body>
 </html>
