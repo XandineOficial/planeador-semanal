@@ -478,6 +478,14 @@
       return h * 60 + m;
     }
 
+
+    // Helper: procura turno por ID ou por nome (compatibilidade com IDs antigos do Firebase)
+    function findShift(idOrName) {
+      if (!idOrName || idOrName === "F") return state.config.shiftTypes.find(s => s.id === "F") || { id: "F", name: "Folga", color: "#555452", notes: "Livre", hours: 0, start: "00:00", home: "00:00", turnCount: 0 };
+      return state.config.shiftTypes.find(s => s.id === idOrName)
+          || state.config.shiftTypes.find(s => s.name === idOrName)
+          || { id: idOrName, name: idOrName, color: "#555452", notes: idOrName, hours: 0, start: "00:00", home: "00:00", turnCount: 0 };
+    }
     // Set Initial Date Context
     const initialToday = new Date();
     state.weekStr = getMonday(initialToday);
@@ -703,7 +711,7 @@
           // Calculate work hours sum
           let totalWorkHours = 0;
           Object.values(localData.shifts || {}).forEach(shId => {
-            const sh = state.config.shiftTypes.find(s => s.id === shId);
+            const sh = findShift(shId);
             if (sh) totalWorkHours += sh.hours;
           });
 
@@ -782,7 +790,9 @@
       
       const dayKey = DAY_KEYS[state.selectedDayIndex];
       const activeShiftId = state.weekState.shifts?.[dayKey] || "F";
-      const shiftObj = state.config.shiftTypes.find(s => s.id === activeShiftId) || { name: "Folga", color: "#555452", notes: "Livre" };
+      const shiftObj = state.config.shiftTypes.find(s => s.id === activeShiftId) 
+        || state.config.shiftTypes.find(s => s.name === activeShiftId)
+        || (activeShiftId && activeShiftId !== "F" ? { name: activeShiftId, id: activeShiftId, color: "#555452", notes: activeShiftId, hours: 0, start: "", home: "" } : { name: "Folga", color: "#555452", notes: "Livre", hours: 0 });
 
       const dayPlan = state.weekState.plan?.days?.[dayKey] || { blocks: [] };
       const blocks = dayPlan.blocks || [];
@@ -845,7 +855,7 @@
             const wdStr = dKey(wd);
             const isRealToday = wdStr === todayKey();
             const dShId = state.weekState.shifts?.[DAY_KEYS[idx]] || "F";
-            const shObj = state.config.shiftTypes.find(s => s.id === dShId) || { name: "F" };
+            const shObj = findShift(dShId);
             return `
               <button onclick="selectDay(${idx})" class="py-2.5 px-0.5 rounded-2xl flex flex-col items-center justify-center transition border ${
                 isSel 
@@ -1247,7 +1257,7 @@
       let totalTurns = 0;
       DAY_KEYS.forEach(k => {
         const shId = state.weekState.shifts?.[k] || "F";
-        const sh = state.config.shiftTypes.find(s => s.id === shId);
+        const sh = findShift(shId);
         if (sh) {
           totalHours += sh.hours;
           totalTurns += (sh.turnCount ?? (sh.hours > 0 ? 1 : 0));
@@ -1258,7 +1268,7 @@
       const selectedDayKey = DAY_KEYS[state.selectedDayIndex];
       const selectedDayCalendarDate = days[state.selectedDayIndex];
       const selectedActiveShiftId = state.weekState.shifts?.[selectedDayKey] || "F";
-      const selectedActiveShift = state.config.shiftTypes.find(s => s.id === selectedActiveShiftId) || { name: "Folga", color: "#555452", notes: "Dia de Folga", start: "00:00", home: "00:00", hours: 0 };
+      const selectedActiveShift = findShift(selectedActiveShiftId);
       const selectedDayBlocks = state.weekState.plan?.days?.[selectedDayKey]?.blocks || [];
 
       // Check current exportType, default to shifts
@@ -1310,7 +1320,7 @@
               const calendarDay = days[index];
               const isToday = calendarDay.toDateString() === now.toDateString();
               const activeShiftId = state.weekState.shifts?.[dayK] || "F";
-              const shiftOfThisDay = state.config.shiftTypes.find(s => s.id === activeShiftId);
+              const shiftOfThisDay = findShift(activeShiftId);
               const isSelected = state.selectedDayIndex === index;
 
               return `
@@ -1566,7 +1576,7 @@
 
         // 1. Shift export
         const shiftId = state.weekState.shifts?.[dayKey] || "F";
-        const shift = state.config.shiftTypes.find((s) => s.id === shiftId);
+        const shift = findShift(shiftId);
         if (shift && shift.hours > 0) {
           try {
             const [shH, shM] = (shift.start || "08:00").split(":").map(Number);
