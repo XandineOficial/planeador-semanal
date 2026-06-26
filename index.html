@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Planeador Alex - Standalone Premium</title>
+  <title>Turno</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Tabler Icons Webfont -->
@@ -58,7 +58,7 @@
     <!-- Top Bar Header -->
     <header class="px-5 py-3.5 flex justify-between items-center bg-darkBg/95 backdrop-blur-md sticky top-0 z-40 border-b border-white/[0.06]">
       <div class="flex items-center gap-3">
-        <h1 class="text-base font-extrabold tracking-tight text-white">Planeador Alex</h1>
+        <h1 class="text-base font-extrabold tracking-tight text-white">Turno</h1>
         <span class="text-[9px] bg-neutral-800 text-neutral-300 px-2.5 py-0.5 rounded-full font-black tracking-wider uppercase">V3.0</span>
       </div>
       <div id="connection-badge" class="flex items-center gap-1.5 bg-neutral-900 px-3 py-1 rounded-full border border-neutral-800 text-neutral-500 text-[10px] font-bold uppercase tracking-wider">
@@ -633,7 +633,8 @@
       }
 
       await loadHistoryAndMetrics();
-      renderActiveTab();
+      // Activar tab Hoje visualmente e renderizar
+      switchTab("hoje");
       updateBacklogNavBadge();
     }
 
@@ -1554,7 +1555,7 @@
       let icsLines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//Alex Planeador//Semana App//PT",
+        "PRODID:-//Turno//App//PT",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH"
       ];
