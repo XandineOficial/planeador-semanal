@@ -295,6 +295,16 @@
           <input type="text" id="shift-modal-notes" placeholder="Ex: Turno da manhã prolongado" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
         </div>
         <div>
+          <label class="text-[10px] uppercase text-neutral-400 font-bold block mb-1">Equivalência em Turnos:</label>
+          <select id="shift-modal-turncount" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+            <option value="0">0 — Folga / Férias</option>
+            <option value="1" selected>1 — Turno simples (M, I, T)</option>
+            <option value="2">2 — Turno duplo (MI, IT)</option>
+            <option value="3">3 — Turno triplo (MIT)</option>
+          </select>
+          <p class="text-[9px] text-neutral-500 mt-1">Define quantos turnos este horário equivale para contagem mensal.</p>
+        </div>
+        <div>
           <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Cor do Turno:</label>
           <div class="flex flex-wrap gap-2 mt-1">
             <button type="button" onclick="setShiftModalColor('#FF9F0A')" class="w-6 h-6 rounded-full border border-white/20 hover:scale-110 transition bg-[#FF9F0A] shift-color-preset" data-color="#FF9F0A"></button>
@@ -370,13 +380,13 @@
 
     // Application Configuration Fallbacks & Static Rules
     const DEFAULT_SHIFTS = [
-      { id: "M", name: "M", start: "07:15", hours: 5.5, end: "12:45", home: "14:00", color: "#0A84FF", notes: "Manhã" },
-      { id: "I", name: "I", start: "12:15", hours: 5.5, end: "17:45", home: "19:00", color: "#378ADD", notes: "Intermédio" },
-      { id: "T", name: "T", start: "17:15", hours: 5.5, end: "22:45", home: "00:15", color: "#D97706", notes: "Tarde" },
-      { id: "IT", name: "IT", start: "12:15", hours: 11, end: "23:15", home: "00:15", color: "#7F77DD", notes: "Intermédio + Tarde" },
-      { id: "MIT", name: "MIT", start: "07:15", hours: 15.5, end: "22:45", home: "00:15", color: "#EF4444", notes: "Triplo Turno" },
-      { id: "MI", name: "MI", start: "07:15", hours: 10.5, end: "17:45", home: "18:30", color: "#EC4899", notes: "Manhã + Intermédio" },
-      { id: "F", name: "Folga", start: "00:00", hours: 0, end: "00:00", home: "00:00", color: "#555452", notes: "Dia Livre" }
+      { id: "M", name: "M", start: "07:15", hours: 5.5, end: "12:45", home: "14:00", color: "#0A84FF", notes: "Manhã", turnCount: 1 },
+      { id: "I", name: "I", start: "12:15", hours: 5.5, end: "17:45", home: "19:00", color: "#378ADD", notes: "Intermédio", turnCount: 1 },
+      { id: "T", name: "T", start: "17:15", hours: 5.5, end: "22:45", home: "00:15", color: "#D97706", notes: "Tarde", turnCount: 1 },
+      { id: "IT", name: "IT", start: "12:15", hours: 11, end: "23:15", home: "00:15", color: "#7F77DD", notes: "Intermédio + Tarde", turnCount: 2 },
+      { id: "MIT", name: "MIT", start: "07:15", hours: 15.5, end: "22:45", home: "00:15", color: "#EF4444", notes: "Triplo Turno", turnCount: 3 },
+      { id: "MI", name: "MI", start: "07:15", hours: 10.5, end: "17:45", home: "18:30", color: "#EC4899", notes: "Manhã + Intermédio", turnCount: 2 },
+      { id: "F", name: "Folga", start: "00:00", hours: 0, end: "00:00", home: "00:00", color: "#555452", notes: "Dia Livre", turnCount: 0 }
     ];
 
     const DEFAULT_FLEX_TASKS = [
@@ -824,7 +834,7 @@
             <span class="text-xs font-bold text-neutral-100">${currentDay.toLocaleDateString("pt-PT", { day: "numeric", month: "long" })}</span>
           </div>
           <div class="px-2.5 py-1 rounded-full text-[10px] font-bold border" style="background-color: ${shiftObj.color || '#0A84FF'}15; border-color: ${shiftObj.color || '#0A84FF'}30; color: ${shiftObj.color || '#0A84FF'}">
-            Turno ${(!shiftObj.name || shiftObj.name === 'undefined') ? (shiftObj.id || '?') : shiftObj.name} (${shiftObj.notes || 'Sem notas'})
+            ${shiftObj.id === 'F' ? 'Folga' : (shiftObj.notes || shiftObj.name || shiftObj.id)}${shiftObj.hours > 0 ? ' (' + shiftObj.start + '–' + shiftObj.home + ')' : ''}
           </div>
         </div>
 
@@ -1240,9 +1250,7 @@
         const sh = state.config.shiftTypes.find(s => s.id === shId);
         if (sh) {
           totalHours += sh.hours;
-          if (sh.hours > 0) {
-            totalTurns++;
-          }
+          totalTurns += (sh.turnCount ?? (sh.hours > 0 ? 1 : 0));
         }
       });
       const loadDetails = getLoadLabel(totalHours);
@@ -2249,6 +2257,7 @@ ${pendingBacklog}
       $("shift-modal-home").value = sh.home || "17:00";
       $("shift-modal-notes").value = sh.notes || "";
       setShiftModalColor(sh.color || "#0A84FF");
+      if ($("shift-modal-turncount")) $("shift-modal-turncount").value = String(sh.turnCount ?? 1);
       $("shift-config-modal").classList.remove("hidden");
     };
 
@@ -2268,13 +2277,15 @@ ${pendingBacklog}
         return;
       }
 
+      const turnCountVal = parseInt($("shift-modal-turncount")?.value ?? "1", 10);
+
       if (idxStr === "") {
         const exists = state.config.shiftTypes.some(s => s.id === id);
         if (exists) {
           alert("Já existe um turno com este ID.");
           return;
         }
-        state.config.shiftTypes.push({ id, name, start, hours, end, home, notes, color });
+        state.config.shiftTypes.push({ id, name, start, hours, end, home, notes, color, turnCount: turnCountVal });
       } else {
         const idx = parseInt(idxStr, 10);
         if (state.config.shiftTypes[idx]) {
@@ -2285,6 +2296,7 @@ ${pendingBacklog}
           state.config.shiftTypes[idx].home = home;
           state.config.shiftTypes[idx].notes = notes;
           state.config.shiftTypes[idx].color = color;
+          state.config.shiftTypes[idx].turnCount = turnCountVal;
         }
       }
 
