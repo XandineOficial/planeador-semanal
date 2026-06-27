@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agenda Alex</title>
+  <title>Planeador Alex - Standalone Premium</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Tabler Icons Webfont -->
@@ -58,7 +58,7 @@
     <!-- Top Bar Header -->
     <header class="px-5 py-3.5 flex justify-between items-center bg-darkBg/95 backdrop-blur-md sticky top-0 z-40 border-b border-white/[0.06]">
       <div class="flex items-center gap-3">
-        <h1 class="text-base font-extrabold tracking-tight text-white">Agenda Alex</h1>
+        <h1 class="text-base font-extrabold tracking-tight text-white">Planeador Alex</h1>
         <span class="text-[9px] bg-neutral-800 text-neutral-300 px-2.5 py-0.5 rounded-full font-black tracking-wider uppercase">V3.0</span>
       </div>
       <div id="connection-badge" class="flex items-center gap-1.5 bg-neutral-900 px-3 py-1 rounded-full border border-neutral-800 text-neutral-500 text-[10px] font-bold uppercase tracking-wider">
@@ -183,24 +183,73 @@
     </div>
   </div>
 
+
+  <!-- Add Event Modal -->
+  <div id="add-event-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm flex items-end justify-center z-[150] px-4" onclick="closeAddEventModal()">
+    <div class="bg-cardBg w-full max-w-sm rounded-t-3xl border border-white/[0.08] p-5 space-y-4" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 class="text-sm font-extrabold text-white">Adicionar Evento</h3>
+          <p class="text-[11px] text-neutral-400">Jantar, consulta, compromisso... A IA vai re-planear a semana.</p>
+        </div>
+        <button onclick="closeAddEventModal()" class="text-neutral-400 hover:text-white"><i class="ti ti-x text-lg"></i></button>
+      </div>
+      <div class="space-y-3">
+        <input type="text" id="event-title" placeholder="Ex: Jantar nos Sogros" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2.5 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-[9px] uppercase text-neutral-500 font-bold block mb-1">Dia</label>
+            <select id="event-day" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-2 text-xs text-neutral-100 focus:outline-none focus:border-accent">
+              <option value="mon">Seg</option>
+              <option value="tue">Ter</option>
+              <option value="wed">Qua</option>
+              <option value="thu">Qui</option>
+              <option value="fri">Sex</option>
+              <option value="sat">Sáb</option>
+              <option value="sun">Dom</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[9px] uppercase text-neutral-500 font-bold block mb-1">Hora</label>
+            <input type="time" id="event-time" value="19:30" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-2 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+          <div>
+            <label class="text-[9px] uppercase text-neutral-500 font-bold block mb-1">Duração (min)</label>
+            <input type="number" id="event-dur" value="120" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-2 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          </div>
+        </div>
+      </div>
+      <button onclick="addEventAndReplan()" class="w-full py-2.5 bg-accent hover:bg-accentHover text-white text-xs font-bold rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+        <i class="ti ti-sparkles"></i> Adicionar e Re-planear Semana
+      </button>
+    </div>
+  </div>
+
   <!-- Log Sleep Modal -->
   <div id="sleep-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end justify-center z-[150] px-4" onclick="closeSleepModal()">
     <div class="bg-cardBg w-full max-w-sm rounded-t-3xl border border-white/[0.08] p-5 space-y-4" onclick="event.stopPropagation()">
       <div class="flex justify-between items-start">
         <div>
-          <h3 class="text-sm font-extrabold text-white">Registar Sono de Ontem</h3>
-          <p class="text-[11px] text-neutral-400">Guarda a hora a que te deitaste e acordaste.</p>
+          <h3 class="text-sm font-extrabold text-white">Registar Sono</h3>
+          <p class="text-[11px] text-neutral-400">Hora de deitar, adormecer e acordar.</p>
         </div>
         <button onclick="closeSleepModal()" class="text-neutral-400 hover:text-white"><i class="ti ti-x text-lg"></i></button>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-[9px] uppercase text-neutral-400 font-extrabold tracking-wider block mb-1">Hora de Deitar:</label>
-          <input type="time" id="sleep-bed-time" value="23:00" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          <input type="time" id="sleep-bed-time" value="23:00" oninput="updateSleepPreview()" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
         </div>
         <div>
           <label class="text-[9px] uppercase text-neutral-400 font-extrabold tracking-wider block mb-1">Hora de Acordar:</label>
-          <input type="time" id="sleep-wake-time" value="07:30" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          <input type="time" id="sleep-wake-time" value="07:30" oninput="updateSleepPreview()" class="w-full bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+        </div>
+      </div>
+      <div>
+        <label class="text-[9px] uppercase text-neutral-400 font-extrabold tracking-wider block mb-1">Tempo a adormecer (min):</label>
+        <div class="flex gap-2">
+          <input type="number" id="sleep-latency" value="15" min="0" max="60" oninput="updateSleepPreview()" class="w-24 bg-neutral-900 border border-white/[0.04] rounded-xl py-2 px-3 text-xs text-center text-neutral-100 focus:outline-none focus:border-accent">
+          <div id="sleep-preview" class="flex-1 bg-neutral-900/60 border border-white/[0.04] rounded-xl p-2 text-[10px] text-neutral-300 leading-relaxed"></div>
         </div>
       </div>
       <button onclick="saveSleep()" class="w-full py-2.5 bg-accent hover:bg-accentHover text-white text-xs font-bold rounded-xl transition shadow-lg">Salvar Registro</button>
@@ -295,16 +344,6 @@
           <input type="text" id="shift-modal-notes" placeholder="Ex: Turno da manhã prolongado" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
         </div>
         <div>
-          <label class="text-[10px] uppercase text-neutral-400 font-bold block mb-1">Equivalência em Turnos:</label>
-          <select id="shift-modal-turncount" class="w-full bg-neutral-900 border border-white/[0.04] rounded-lg py-2 px-3 text-xs text-neutral-100 focus:outline-none focus:border-accent">
-            <option value="0">0 — Folga / Férias</option>
-            <option value="1" selected>1 — Turno simples (M, I, T)</option>
-            <option value="2">2 — Turno duplo (MI, IT)</option>
-            <option value="3">3 — Turno triplo (MIT)</option>
-          </select>
-          <p class="text-[9px] text-neutral-500 mt-1">Define quantos turnos este horário equivale para contagem mensal.</p>
-        </div>
-        <div>
           <label class="text-[9px] uppercase text-neutral-400 font-bold block mb-1">Cor do Turno:</label>
           <div class="flex flex-wrap gap-2 mt-1">
             <button type="button" onclick="setShiftModalColor('#FF9F0A')" class="w-6 h-6 rounded-full border border-white/20 hover:scale-110 transition bg-[#FF9F0A] shift-color-preset" data-color="#FF9F0A"></button>
@@ -380,13 +419,13 @@
 
     // Application Configuration Fallbacks & Static Rules
     const DEFAULT_SHIFTS = [
-      { id: "M", name: "M", start: "07:15", hours: 5.5, end: "12:45", home: "14:00", color: "#0A84FF", notes: "Manhã", turnCount: 1 },
-      { id: "I", name: "I", start: "12:15", hours: 5.5, end: "17:45", home: "19:00", color: "#378ADD", notes: "Intermédio", turnCount: 1 },
-      { id: "T", name: "T", start: "17:15", hours: 5.5, end: "22:45", home: "00:15", color: "#D97706", notes: "Tarde", turnCount: 1 },
-      { id: "IT", name: "IT", start: "12:15", hours: 11, end: "23:15", home: "00:15", color: "#7F77DD", notes: "Intermédio + Tarde", turnCount: 2 },
-      { id: "MIT", name: "MIT", start: "07:15", hours: 15.5, end: "22:45", home: "00:15", color: "#EF4444", notes: "Triplo Turno", turnCount: 3 },
-      { id: "MI", name: "MI", start: "07:15", hours: 10.5, end: "17:45", home: "18:30", color: "#EC4899", notes: "Manhã + Intermédio", turnCount: 2 },
-      { id: "F", name: "Folga", start: "00:00", hours: 0, end: "00:00", home: "00:00", color: "#555452", notes: "Dia Livre", turnCount: 0 }
+      { id: "M", name: "M", start: "07:15", hours: 5.5, end: "12:45", home: "14:00", color: "#0A84FF", notes: "Manhã" },
+      { id: "I", name: "I", start: "12:15", hours: 5.5, end: "17:45", home: "19:00", color: "#378ADD", notes: "Intermédio" },
+      { id: "T", name: "T", start: "17:15", hours: 5.5, end: "22:45", home: "00:15", color: "#D97706", notes: "Tarde" },
+      { id: "IT", name: "IT", start: "12:15", hours: 11, end: "23:15", home: "00:15", color: "#7F77DD", notes: "Intermédio + Tarde" },
+      { id: "MIT", name: "MIT", start: "07:15", hours: 15.5, end: "22:45", home: "00:15", color: "#EF4444", notes: "Triplo Turno" },
+      { id: "MI", name: "MI", start: "07:15", hours: 10.5, end: "17:45", home: "18:30", color: "#EC4899", notes: "Manhã + Intermédio" },
+      { id: "F", name: "Folga", start: "00:00", hours: 0, end: "00:00", home: "00:00", color: "#555452", notes: "Dia Livre" }
     ];
 
     const DEFAULT_FLEX_TASKS = [
@@ -453,23 +492,29 @@
     // Date calculations
     function getMonday(d) {
       const dateCopy = new Date(d);
-      if (isNaN(dateCopy.getTime())) return new Date().toISOString().split("T")[0];
+      if (isNaN(dateCopy.getTime())) { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; }
       const day = dateCopy.getDay();
       const diff = dateCopy.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(dateCopy.setDate(diff)).toISOString().split("T")[0];
+      dateCopy.setDate(diff);
+      return `${dateCopy.getFullYear()}-${String(dateCopy.getMonth()+1).padStart(2,"0")}-${String(dateCopy.getDate()).padStart(2,"0")}`;
     }
     function dKey(d) {
-      return d.toISOString().split("T")[0];
+      // Formatar manualmente para evitar timezone issues
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${dd}`;
     }
     function todayKey() {
       return dKey(new Date());
     }
     function getWeekDays(monStr) {
       const days = [];
+      // Usar partes da data para evitar problema de timezone com new Date("YYYY-MM-DD")
+      const [y, m, d] = monStr.split("-").map(Number);
       for (let i = 0; i < 7; i++) {
-        const d = new Date(monStr);
-        d.setDate(d.getDate() + i);
-        days.push(d);
+        const day = new Date(y, m - 1, d + i);
+        days.push(day);
       }
       return days;
     }
@@ -478,21 +523,15 @@
       const [h, m] = t.split(":").map(Number);
       return h * 60 + m;
     }
-
-
-    // Helper: procura turno por ID ou por nome (compatibilidade com IDs antigos do Firebase)
-    function findShift(idOrName) {
-      if (!idOrName || idOrName === "F") return state.config.shiftTypes.find(s => s.id === "F") || { id: "F", name: "Folga", color: "#555452", notes: "Livre", hours: 0, start: "00:00", home: "00:00", turnCount: 0 };
-      const found = state.config.shiftTypes.find(s => s.id === idOrName)
-          || state.config.shiftTypes.find(s => s.name === idOrName);
-      if (!found) return { id: idOrName, name: idOrName, color: "#555452", notes: idOrName, hours: 0, start: "00:00", home: "00:00", turnCount: 0 };
-      // Normalizar campos legacy (startTime→start, homeTime→home)
-      return {
-        ...found,
-        start: found.start || found.startTime || "00:00",
-        home: found.home || found.homeTime || "00:00",
-      };
+    function minToTime(m) {
+      const h = Math.floor(((m % 1440) + 1440) % 1440 / 60);
+      const min = ((m % 1440) + 1440) % 1440 % 60;
+      return `${String(h).padStart(2,"0")}:${String(min).padStart(2,"0")}`;
     }
+    function blockEndTime(startTime, durationMin) {
+      return minToTime(timeToMin(startTime) + Number(durationMin));
+    }
+
     // Set Initial Date Context
     const initialToday = new Date();
     state.weekStr = getMonday(initialToday);
@@ -591,24 +630,10 @@
         const cfgSnap = await getDoc(cfgRef);
         if (cfgSnap.exists()) {
           const cloudData = cfgSnap.data();
-          // Migração: detectar IDs antigos (st1, st2, st1779...) e substituir pelos defaults
-          const hasLegacyIds = (cloudData.shiftTypes || []).some(s => s.id.startsWith("st") || s.id.match(/^st\d+/));
-          if (hasLegacyIds) {
-            console.log("Migração: IDs antigos detectados, a substituir por defaults...");
-            state.config.shiftTypes = [...DEFAULT_SHIFTS];
-            state.config.flexTasks = cloudData.flexTasks || state.config.flexTasks;
-            state.config.geminiKey = cloudData.geminiKey || state.config.geminiKey;
-            state.config.lowWorkloadThreshold = cloudData.lowWorkloadThreshold ?? state.config.lowWorkloadThreshold;
-            state.config.highWorkloadThreshold = cloudData.highWorkloadThreshold ?? state.config.highWorkloadThreshold;
-            state.config = sanitizeConfig(state.config);
-            await setDoc(cfgRef, state.config);
-            console.log("Migração concluída.");
-          } else {
-            state.config.shiftTypes = cloudData.shiftTypes || state.config.shiftTypes;
-            state.config.flexTasks = cloudData.flexTasks || state.config.flexTasks;
-            state.config.geminiKey = cloudData.geminiKey || state.config.geminiKey;
-            state.config = sanitizeConfig(state.config);
-          }
+          state.config.shiftTypes = cloudData.shiftTypes || state.config.shiftTypes;
+          state.config.flexTasks = cloudData.flexTasks || state.config.flexTasks;
+          state.config.geminiKey = cloudData.geminiKey || state.config.geminiKey;
+          state.config = sanitizeConfig(state.config);
           saveLocal("alex_config_v3", state.config);
         } else {
           await setDoc(cfgRef, state.config);
@@ -637,8 +662,7 @@
           });
           state.backlog = items;
           saveLocal("alex_backlog_v3", items);
-          // Só re-renderiza se estiver no backlog, senão só actualiza o badge
-          if (state.activeTab === "backlog") renderActiveTab();
+          renderActiveTab();
           updateBacklogNavBadge();
         }, (err) => {
           console.warn("Firestore sync backlog permission denied or unavailable:", err);
@@ -655,8 +679,7 @@
       }
 
       await loadHistoryAndMetrics();
-      // Activar tab Hoje visualmente e renderizar
-      switchTab("hoje");
+      renderActiveTab();
       updateBacklogNavBadge();
     }
 
@@ -734,7 +757,7 @@
           // Calculate work hours sum
           let totalWorkHours = 0;
           Object.values(localData.shifts || {}).forEach(shId => {
-            const sh = findShift(shId);
+            const sh = state.config.shiftTypes.find(s => s.id === shId);
             if (sh) totalWorkHours += sh.hours;
           });
 
@@ -807,18 +830,13 @@
     // ────────────────────────────────────────────────────────────────────────
     function renderHojeTab(container) {
       const days = getWeekDays(state.weekStr);
-      // Garantir que selectedDayIndex é válido
-      if (state.selectedDayIndex < 0 || state.selectedDayIndex > 6) state.selectedDayIndex = 0;
       const currentDay = days[state.selectedDayIndex];
-      if (!currentDay) { container.innerHTML = "<p style='color:white;padding:20px'>A carregar...</p>"; return; }
       const selectedDayStr = dKey(currentDay);
       const isToday = selectedDayStr === todayKey();
       
       const dayKey = DAY_KEYS[state.selectedDayIndex];
       const activeShiftId = state.weekState.shifts?.[dayKey] || "F";
-      const shiftObj = state.config.shiftTypes.find(s => s.id === activeShiftId) 
-        || state.config.shiftTypes.find(s => s.name === activeShiftId)
-        || (activeShiftId && activeShiftId !== "F" ? { name: activeShiftId, id: activeShiftId, color: "#555452", notes: activeShiftId, hours: 0, start: "", home: "" } : { name: "Folga", color: "#555452", notes: "Livre", hours: 0 });
+      const shiftObj = state.config.shiftTypes.find(s => s.id === activeShiftId) || { name: "Folga", color: "#555452", notes: "Livre" };
 
       const dayPlan = state.weekState.plan?.days?.[dayKey] || { blocks: [] };
       const blocks = dayPlan.blocks || [];
@@ -862,98 +880,103 @@
         }
       }
 
+      // Próximo turno para info
+      const tomorrowIdx = (state.selectedDayIndex + 1) % 7;
+      const tomorrowShiftId = state.weekState.shifts?.[DAY_KEYS[tomorrowIdx]] || "F";
+      const tomorrowShift = findShift(tomorrowShiftId);
+
       let html = `
-        <!-- Title bar -->
-        <div class="flex items-center justify-between bg-neutral-900/60 p-3 rounded-2xl border border-white/[0.03]">
-          <div class="flex flex-col">
-            <span class="text-[10px] font-black uppercase tracking-wider text-neutral-500">${DAYS_PT[state.selectedDayIndex]}</span>
-            <span class="text-xs font-bold text-neutral-100">${currentDay.toLocaleDateString("pt-PT", { day: "numeric", month: "long" })}</span>
+        <!-- TURNO EM DESTAQUE -->
+        <div class="rounded-3xl p-4 border" style="background:${shiftObj.color || '#1D9E75'}10; border-color:${shiftObj.color || '#1D9E75'}25">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <span class="text-[9px] font-black uppercase tracking-widest text-neutral-500">${DAYS_PT[state.selectedDayIndex]} · ${currentDay.toLocaleDateString("pt-PT", { day: "numeric", month: "long" })}</span>
+              <div class="text-lg font-black text-white mt-0.5">
+                ${shiftObj.id === 'F' ? '🌿 Dia de Folga' : (shiftObj.notes || shiftObj.name)}
+              </div>
+              ${shiftObj.hours > 0 ? `<div class="text-[10px] font-bold mt-0.5" style="color:${shiftObj.color}">${shiftObj.start} → ${shiftObj.home} · ${shiftObj.hours}h</div>` : ''}
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              ${tomorrowShift && tomorrowShift.hours > 0 ? `<div class="text-[9px] text-neutral-500 font-bold">Amanhã: ${tomorrowShift.name}</div>` : ''}
+              <div class="text-[9px] font-black px-2 py-0.5 rounded-full" style="background:${shiftObj.color || '#1D9E75'}20; color:${shiftObj.color || '#1D9E75'}">${shiftObj.turnCount > 1 ? shiftObj.turnCount + ' turnos' : shiftObj.id === 'F' ? 'Folga' : '1 turno'}</div>
+            </div>
           </div>
-          <div class="px-2.5 py-1 rounded-full text-[10px] font-bold border" style="background-color: ${shiftObj.color || '#0A84FF'}15; border-color: ${shiftObj.color || '#0A84FF'}30; color: ${shiftObj.color || '#0A84FF'}">
-            ${shiftObj.id === 'F' ? 'Folga' : (shiftObj.notes || shiftObj.name || shiftObj.id)}${shiftObj.hours > 0 ? ' (' + shiftObj.start + '–' + shiftObj.home + ')' : ''}
-          </div>
-        </div>
-
-        <!-- Weekly navigation strip -->
-        <div class="grid grid-cols-7 gap-1.5">
-          ${days.map((wd, idx) => {
-            const isSel = idx === state.selectedDayIndex;
-            const wdStr = dKey(wd);
-            const isRealToday = wdStr === todayKey();
-            const dShId = state.weekState.shifts?.[DAY_KEYS[idx]] || "F";
-            const shObj = findShift(dShId);
-            return `
-              <button onclick="selectDay(${idx})" class="py-2.5 px-0.5 rounded-2xl flex flex-col items-center justify-center transition border ${
-                isSel 
-                  ? "bg-accent border-accent text-white" 
-                  : isRealToday 
-                    ? "bg-neutral-900 border-accent/40 text-accent font-bold" 
-                    : "bg-[#141413] border-white/[0.03] text-neutral-400 hover:border-neutral-800"
+          
+          <!-- Strip semanal compacta -->
+          <div class="flex gap-1">
+            ${days.map((wd, idx) => {
+              const isSel = idx === state.selectedDayIndex;
+              const isRealToday = dKey(wd) === todayKey();
+              const dShId = state.weekState.shifts?.[DAY_KEYS[idx]] || "F";
+              const shObj2 = findShift(dShId);
+              return `<button onclick="selectDay(${idx})" class="flex-1 py-1.5 rounded-xl flex flex-col items-center transition ${
+                isSel ? "bg-white/15" : isRealToday ? "bg-white/5" : ""
               }">
-                <span class="text-[9px] uppercase font-extrabold tracking-wider opacity-65">${DAYS_SHORT[idx]}</span>
-                <span class="text-xs font-bold my-0.5">${wd.getDate()}</span>
-                <span class="text-[8px] font-black truncate max-w-full block px-0.5" style="color: ${isSel ? '#ffffff' : shObj.color || '#555452'}">${shObj.id}</span>
-              </button>
-            `;
-          }).join("")}
-        </div>
-
-        <!-- Completion stats -->
-        <div class="bg-cardBg p-4 rounded-3xl border border-white/[0.04] space-y-3 shadow-lg">
-          <div class="flex justify-between items-center">
-            <h3 class="text-xs font-black uppercase text-neutral-400 tracking-wider">Metas Diárias</h3>
-            <span class="text-xs font-extrabold text-accent">${completedCount}/${blocks.length} Concluídos (${progressPct}%)</span>
-          </div>
-          <div class="w-full bg-neutral-950 h-2.5 rounded-full overflow-hidden border border-white/[0.02]">
-            <div class="bg-accent h-full transition-all duration-500" style="width: ${progressPct}%"></div>
+                <span class="text-[8px] uppercase font-black opacity-40">${DAYS_SHORT[idx]}</span>
+                <span class="text-[10px] font-black ${isSel ? 'text-white' : 'text-neutral-400'}">${wd.getDate()}</span>
+                <span class="w-1.5 h-1.5 rounded-full mt-0.5 block" style="background:${shObj2.id === 'F' ? 'transparent' : shObj2.color};outline:1px solid ${shObj2.id === 'F' ? '#333' : shObj2.color}"></span>
+              </button>`;
+            }).join("")}
           </div>
         </div>
 
-        <!-- Yesterday's sleep logs and Energy Selector (Bio-Tracking) -->
-        <div class="grid grid-cols-2 gap-3">
-          <div onclick="openSleepModal('${selectedDayStr}')" class="bg-cardBg p-3.5 rounded-3xl border border-white/[0.04] space-y-1.5 cursor-pointer hover:border-neutral-800 transition shadow-md">
-            <div class="flex justify-between items-center text-neutral-500">
-              <span class="text-[9px] uppercase font-black tracking-wider">Sono de Ontem</span>
-              <i class="ti ti-moon text-blue-400"></i>
+        <!-- PROGRESSO + BOTÃO EVENTO -->
+        <div class="flex items-center gap-3">
+          <div class="flex-1 bg-cardBg rounded-2xl p-3 border border-white/[0.04]">
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="text-[9px] font-black uppercase text-neutral-500 tracking-wider">Progresso do dia</span>
+              <span class="text-[9px] font-extrabold text-accent">${completedCount}/${blocks.length} feitos</span>
             </div>
-            <div class="flex items-baseline gap-1">
-              <span class="text-lg font-black text-white">${yesterdayHours > 0 ? `${yesterdayHours}h` : "Sem dados"}</span>
-              ${yesterdayCycles > 0 ? `<span class="text-[9px] text-neutral-500 font-bold">${yesterdayCycles} ciclos</span>` : ""}
+            <div class="w-full bg-neutral-900 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-accent h-full transition-all duration-500" style="width:${progressPct}%"></div>
             </div>
-            <span class="text-[10px] text-accent font-bold underline block mt-1">Registar sono</span>
           </div>
+          <button onclick="openAddEventModal()" class="flex flex-col items-center justify-center w-16 h-14 bg-accent hover:bg-accentHover rounded-2xl text-white shadow-lg shrink-0 transition">
+            <i class="ti ti-calendar-plus text-lg"></i>
+            <span class="text-[8px] font-black mt-0.5">+ Evento</span>
+          </button>
+        </div>
 
-          <div class="bg-cardBg p-3.5 rounded-3xl border border-white/[0.04] space-y-2 shadow-md">
-            <div class="flex justify-between items-center text-neutral-500">
-              <span class="text-[9px] uppercase font-black tracking-wider">Energia Hoje</span>
-              <i class="ti ti-bolt text-amber-400"></i>
+        <!-- SONO + ENERGIA compactos -->
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="openSleepModal('${selectedDayStr}')" class="bg-cardBg p-3 rounded-2xl border border-white/[0.04] text-left hover:border-neutral-700 transition">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-[9px] font-black uppercase text-neutral-500">Sono ontem</span>
+              <i class="ti ti-moon text-blue-400 text-xs"></i>
             </div>
-            <div class="flex justify-around items-center gap-1 pt-1">
-              ${["baixa", "normal", "alta", "excelente"].map(lvl => {
+            <div class="text-sm font-black text-white">${yesterdayHours > 0 ? yesterdayHours + "h" : "—"}</div>
+            <div class="text-[9px] text-neutral-600 mt-0.5">${yesterdayHours > 0 ? yesterdayCycles + " ciclos · toca p/ editar" : "Toca para registar"}</div>
+          </button>
+          <div class="bg-cardBg p-3 rounded-2xl border border-white/[0.04]">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-[9px] font-black uppercase text-neutral-500">Energia</span>
+              <i class="ti ti-bolt text-amber-400 text-xs"></i>
+            </div>
+            <div class="flex gap-1">
+              ${["baixa","normal","alta","excelente"].map(lvl => {
                 const isSel = (state.energyLogs[selectedDayStr] || "normal") === lvl;
-                const emoji = lvl === "baixa" ? "🥱" : lvl === "normal" ? "😐" : lvl === "alta" ? "⚡" : "🔥";
-                return `
-                  <button onclick="saveEnergy('${selectedDayStr}', '${lvl}')" class="w-7 h-7 flex items-center justify-center rounded-lg border text-sm transition-all ${
-                    isSel ? "bg-amber-500/15 border-amber-500 scale-105" : "bg-neutral-900 border-white/[0.03] opacity-60 hover:opacity-100"
-                  }">${emoji}</button>
-                `;
+                const emoji = lvl==="baixa"?"🥱":lvl==="normal"?"😐":lvl==="alta"?"⚡":"🔥";
+                return `<button onclick="saveEnergy('${selectedDayStr}','${lvl}')" class="flex-1 h-7 rounded-lg text-xs transition border ${isSel ? "bg-amber-500/20 border-amber-500/40" : "bg-neutral-900 border-transparent opacity-50 hover:opacity-80"}">${emoji}</button>`;
               }).join("")}
             </div>
           </div>
         </div>
 
-        <!-- Sleep cycle insight card -->
         ${sleepAnalysisText ? `
-          <div class="bg-indigo-950/20 border border-indigo-500/15 p-3 rounded-2xl flex items-start gap-2.5 shadow-sm">
-            <i class="ti ti-info-circle text-indigo-400 mt-0.5 text-base shrink-0"></i>
-            <div class="text-[10px] leading-relaxed text-neutral-300">
-              <strong class="text-white block mb-0.5">${isOptimalSleep ? "Fase Circadiana Excelente" : "Fase de Despertar Desalinhada"}</strong>
-              ${sleepAnalysisText}
-              ${yesterdayHours < 7 ? '<span class="text-red-400 font-bold block mt-1">⚠️ Cuidado: Dormiste menos de 7 horas. Recomenda-se sesta de 20 minutos hoje!</span>' : ''}
-            </div>
+          <div class="bg-indigo-950/20 border border-indigo-500/15 p-2.5 rounded-2xl flex items-start gap-2 text-[10px] text-neutral-300 leading-relaxed">
+            <i class="ti ti-info-circle text-indigo-400 text-xs shrink-0 mt-0.5"></i>
+            <span>${sleepAnalysisText}${yesterdayHours > 0 && yesterdayHours < 7 ? ' <b class="text-red-400">Menos de 7h.</b>' : ''}</span>
           </div>
         ` : ""}
 
+        <!-- AGENDA DO DIA -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <h3 class="text-[10px] font-black uppercase text-neutral-400 tracking-wider">Agenda</h3>
+            <button onclick="openAddBlockModal()" class="px-2.5 py-1 bg-neutral-900 rounded-xl border border-white/[0.04] text-[9px] font-bold text-neutral-400 flex items-center gap-1 hover:text-accent transition">
+              <i class="ti ti-plus text-xs"></i> Manual
+            </button>
+          </div>
         <!-- Day block list section -->
         <div class="space-y-3">
           <div class="flex justify-between items-center">
@@ -1004,7 +1027,7 @@
                   <div onclick="openBlockModal('${dayKey}', ${idx})" class="flex-1 min-w-0 cursor-pointer">
                     <h4 class="text-xs font-extrabold text-neutral-100 truncate ${isDone ? 'line-through text-neutral-500' : ''}">${b.title}</h4>
                     <div class="flex flex-wrap items-center gap-1.5 mt-0.5 text-[9px] text-neutral-500 uppercase font-black tracking-wider">
-                      <span class="text-accent font-bold font-mono">${b.time}</span>
+                      <span class="text-accent font-bold font-mono">${b.time} – ${blockEndTime(b.time, b.duration)}</span>
                       <span>·</span>
                       <span class="font-bold font-mono">${b.duration} MIN</span>
                       <span>·</span>
@@ -1030,34 +1053,6 @@
           </div>
         </div>
 
-        <!-- Passive past weeks list -->
-        <div class="space-y-2.5">
-          <h3 class="text-xs font-black uppercase text-neutral-400 tracking-wider">Histórico de Performance (Últimas 3 Semanas)</h3>
-          <div class="space-y-2">
-            ${state.pastWeeksCache.length > 0 ? state.pastWeeksCache.map(data => {
-              const weekLabel = `Semana de ${new Date(data.weekStr).toLocaleDateString("pt-PT", { day: "numeric", month: "short" })}`;
-              const loadDetails = getLoadLabel(data.totalWorkHours);
-              return `
-                <div class="bg-cardBg/40 border border-white/[0.03] p-3 rounded-2xl flex items-center justify-between text-xs">
-                  <div class="space-y-0.5">
-                    <span class="font-bold text-white block text-[11px]">${weekLabel}</span>
-                    <span class="text-[9px] text-neutral-500 uppercase font-extrabold tracking-wider">
-                      Carga: <span style="color: ${loadDetails.color}">${data.totalWorkHours}h (${loadDetails.label})</span>
-                    </span>
-                  </div>
-                  <div class="text-right space-y-0.5">
-                    <span class="font-bold text-neutral-300 block text-[11px]">Sono: ${data.sleepAverage ? `${data.sleepAverage}h/noite` : "Sem dados"}</span>
-                    <span class="text-[9px] text-accent uppercase font-black tracking-widest">Estável ✅</span>
-                  </div>
-                </div>
-              `;
-            }).join("") : `
-              <div class="text-center py-4 text-neutral-600 text-[10px]">
-                Nenhum histórico disponível de semanas anteriores.
-              </div>
-            `}
-          </div>
-        </div>
       `;
 
       container.innerHTML = html;
@@ -1090,11 +1085,30 @@
       const currentLog = state.sleepLogs[yesterdayStr] || { bed: "23:00", wake: "07:30" };
       $("sleep-bed-time").value = currentLog.bed;
       $("sleep-wake-time").value = currentLog.wake;
+      if ($("sleep-latency")) $("sleep-latency").value = currentLog.latency || 15;
       $("sleep-modal").classList.remove("hidden");
+      setTimeout(() => updateSleepPreview(), 50);
     };
     window.closeSleepModal = function() {
       $("sleep-modal").classList.add("hidden");
     };
+    window.updateSleepPreview = function() {
+      const bed = document.getElementById("sleep-bed-time")?.value;
+      const wake = document.getElementById("sleep-wake-time")?.value;
+      const latency = parseInt(document.getElementById("sleep-latency")?.value || "15", 10);
+      const preview = document.getElementById("sleep-preview");
+      if (!bed || !wake || !preview) return;
+      let bedM = timeToMin(bed);
+      let wakeM = timeToMin(wake);
+      if (wakeM <= bedM) wakeM += 1440;
+      const asleepM = bedM + latency;
+      const totalSleepMin = wakeM - asleepM;
+      const sleepH = Math.floor(totalSleepMin / 60);
+      const sleepMin = totalSleepMin % 60;
+      const cycles = Math.round(totalSleepMin / 90 * 10) / 10;
+      preview.innerHTML = `<span class="text-neutral-500">Adormece:</span> ~${minToTime(asleepM)}<br><span class="text-neutral-500">Sono real:</span> <span class="text-accent font-bold">${sleepH}h${sleepMin > 0 ? sleepMin + "m" : ""}</span> (~${cycles} ciclos)`;
+    };
+
     window.saveSleep = async function() {
       const targetDate = new Date(activeSleepDateStr);
       targetDate.setDate(targetDate.getDate() - 1);
@@ -1102,7 +1116,8 @@
 
       const bedVal = $("sleep-bed-time").value;
       const wakeVal = $("sleep-wake-time").value;
-      const data = { bed: bedVal, wake: wakeVal };
+      const latencyVal = parseInt($("sleep-latency")?.value || "15", 10);
+      const data = { bed: bedVal, wake: wakeVal, latency: latencyVal };
 
       state.sleepLogs[yesterdayStr] = data;
       saveLocal("alex_sleep_v3", state.sleepLogs);
@@ -1157,6 +1172,12 @@
         status: nextChecked ? "done" : "pending"
       };
 
+      // Registar padrão de aprendizagem
+      if (nextChecked) {
+        const block = state.weekState.plan?.days?.[dayKey]?.blocks?.[idx];
+        if (block) recordPattern(dayKey, block.type, block.title, "done");
+      }
+
       renderActiveTab();
       await saveCloudWeekState();
     };
@@ -1176,6 +1197,12 @@
       };
       
       state.weekState.checked[blkK] = (status === "done");
+
+      // Registar padrão de aprendizagem
+      const learnBlock = state.weekState.plan?.days?.[activeBlockDayKey]?.blocks?.[activeBlockIdx];
+      if (learnBlock && (status === "done" || status === "skipped")) {
+        recordPattern(activeBlockDayKey, learnBlock.type, learnBlock.title, status);
+      }
 
       if (status === "skipped") {
         const block = state.weekState.plan?.days?.[activeBlockDayKey]?.blocks?.[activeBlockIdx];
@@ -1283,10 +1310,12 @@
       let totalTurns = 0;
       DAY_KEYS.forEach(k => {
         const shId = state.weekState.shifts?.[k] || "F";
-        const sh = findShift(shId);
+        const sh = state.config.shiftTypes.find(s => s.id === shId);
         if (sh) {
           totalHours += sh.hours;
-          totalTurns += (sh.turnCount ?? (sh.hours > 0 ? 1 : 0));
+          if (sh.hours > 0) {
+            totalTurns++;
+          }
         }
       });
       const loadDetails = getLoadLabel(totalHours);
@@ -1294,7 +1323,7 @@
       const selectedDayKey = DAY_KEYS[state.selectedDayIndex];
       const selectedDayCalendarDate = days[state.selectedDayIndex];
       const selectedActiveShiftId = state.weekState.shifts?.[selectedDayKey] || "F";
-      const selectedActiveShift = findShift(selectedActiveShiftId);
+      const selectedActiveShift = state.config.shiftTypes.find(s => s.id === selectedActiveShiftId) || { name: "Folga", color: "#555452", notes: "Dia de Folga", start: "00:00", home: "00:00", hours: 0 };
       const selectedDayBlocks = state.weekState.plan?.days?.[selectedDayKey]?.blocks || [];
 
       // Check current exportType, default to shifts
@@ -1346,7 +1375,7 @@
               const calendarDay = days[index];
               const isToday = calendarDay.toDateString() === now.toDateString();
               const activeShiftId = state.weekState.shifts?.[dayK] || "F";
-              const shiftOfThisDay = findShift(activeShiftId);
+              const shiftOfThisDay = state.config.shiftTypes.find(s => s.id === activeShiftId);
               const isSelected = state.selectedDayIndex === index;
 
               return `
@@ -1580,7 +1609,7 @@
       let icsLines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//Turno//App//PT",
+        "PRODID:-//Alex Planeador//Semana App//PT",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH"
       ];
@@ -1602,7 +1631,7 @@
 
         // 1. Shift export
         const shiftId = state.weekState.shifts?.[dayKey] || "F";
-        const shift = findShift(shiftId);
+        const shift = state.config.shiftTypes.find((s) => s.id === shiftId);
         if (shift && shift.hours > 0) {
           try {
             const [shH, shM] = (shift.start || "08:00").split(":").map(Number);
@@ -1734,6 +1763,7 @@ Você é o assistente inteligente de planeamento diário do Alex. Crie uma rotin
    - Se o turno é de tarde (T, IT), agende atividades como Ginásio e Meditação na parte da manhã.
    - Dias de Folga (F) são perfeitos para mais atividades de lazer prolongadas, namorada e descompressão.
 4. Refeições: Agende blocos para Pequeno-almoço, Almoço e Jantar ao longo do dia, adaptados ao turno ativo.
+   REGRA ESPECIAL - Jornada Contínua: Se o turno for MI ou IT (turnos duplos sem pausa), NÃO crie bloco de Almoço ou Jantar de 60min. Em vez disso, crie apenas "Pausa Rápida / Snack (15min)" dentro do horário de trabalho. Estes turnos são jornada contínua sem saída para refeição.
 5. Backlog: Distribua algumas das tarefas pendentes urgentes ou prioritárias ao longo dos dias livres ou menos ocupados.
 
 O seu output deve ser estritamente em formato JSON puro, sem formatação markdown extra, sem blocos de código com a palavra "json". O JSON deve respeitar o seguinte esquema exato:
@@ -1757,6 +1787,25 @@ O seu output deve ser estritamente em formato JSON puro, sem formatação markdo
 Ordene os blocos cronologicamente por hora de início ("time"). Retorne apenas o objeto JSON válido.
       `;
 
+      // Carregar padrões acumulados
+      const patterns = await loadPatterns();
+      let patternsText = "";
+      if (Object.keys(patterns).length > 0) {
+        const insights = Object.entries(patterns)
+          .filter(([, p]) => p.total >= 2) // só padrões com dados suficientes
+          .map(([key, p]) => {
+            const [day, type] = key.split("_");
+            const dayPT = DAYS_PT[DAY_KEYS.indexOf(day)] || day;
+            const pct = Math.round(p.done / p.total * 100);
+            if (pct < 40) return `- ${type} em ${dayPT}: cumprido apenas ${pct}% das vezes (${p.total} registos) — evita agendar`;
+            if (pct > 80) return `- ${type} em ${dayPT}: cumprido ${pct}% das vezes — bom dia para isto`;
+            return null;
+          })
+          .filter(Boolean)
+          .join("\n");
+        if (insights) patternsText = `\n\nPADRÕES APRENDIDOS DO ALEX (respeita estes):\n${insights}`;
+      }
+
       const promptUser = `
 Turnos Definidos:
 ${shiftScheduleInfo}
@@ -1765,27 +1814,42 @@ Hábitos e Preferências de Atividades Flexíveis:
 ${flexTasksList}
 
 Itens Relevantes do Backlog a Integrar:
-${pendingBacklog}
+${pendingBacklog}${patternsText}
       `;
 
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{ text: systemRulesAndConstraints + "\n\n" + promptUser }]
-            }],
-            generationConfig: {
-              responseMimeType: "application/json"
-            }
-          })
-        });
-
-        if (!response.ok) {
-          const errMsg = await response.text();
-          throw new Error(`Erro na API Gemini: ${response.status} - ${errMsg}`);
+        // Tentar modelos por ordem de preferência
+        const MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-3.5-flash"];
+        let response = null;
+        let lastErr = "";
+        
+        for (const model of MODELS) {
+          try {
+            $("loader-text").innerText = `A usar ${model}...`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            response = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [{ text: systemRulesAndConstraints + "\n\n" + promptUser }]
+                }],
+                generationConfig: {
+                  responseMimeType: "application/json"
+                }
+              })
+            });
+            if (response.ok) break;
+            lastErr = `${model}: ${response.status}`;
+            response = null;
+          } catch(e) {
+            lastErr = e.message;
+            response = null;
+          }
+        }
+        
+        if (!response || !response.ok) {
+          throw new Error(`Todos os modelos falharam. Último erro: ${lastErr}`);
         }
 
         const resData = await response.json();
@@ -2158,7 +2222,7 @@ ${pendingBacklog}
                       ${sName}
                     </div>
                     <div class="min-w-0">
-                      <span class="text-xs font-bold text-white block truncate">${sh.notes || 'Agenda Alex'}</span>
+                      <span class="text-xs font-bold text-white block truncate">${sh.notes || 'Turno'}</span>
                       <span class="text-[9px] text-neutral-500 uppercase font-extrabold tracking-wider block truncate sm:inline">${infoText}</span>
                     </div>
                   </div>
@@ -2293,7 +2357,6 @@ ${pendingBacklog}
       $("shift-modal-home").value = sh.home || "17:00";
       $("shift-modal-notes").value = sh.notes || "";
       setShiftModalColor(sh.color || "#0A84FF");
-      if ($("shift-modal-turncount")) $("shift-modal-turncount").value = String(sh.turnCount ?? 1);
       $("shift-config-modal").classList.remove("hidden");
     };
 
@@ -2313,15 +2376,13 @@ ${pendingBacklog}
         return;
       }
 
-      const turnCountVal = parseInt($("shift-modal-turncount")?.value ?? "1", 10);
-
       if (idxStr === "") {
         const exists = state.config.shiftTypes.some(s => s.id === id);
         if (exists) {
           alert("Já existe um turno com este ID.");
           return;
         }
-        state.config.shiftTypes.push({ id, name, start, hours, end, home, notes, color, turnCount: turnCountVal });
+        state.config.shiftTypes.push({ id, name, start, hours, end, home, notes, color });
       } else {
         const idx = parseInt(idxStr, 10);
         if (state.config.shiftTypes[idx]) {
@@ -2332,7 +2393,6 @@ ${pendingBacklog}
           state.config.shiftTypes[idx].home = home;
           state.config.shiftTypes[idx].notes = notes;
           state.config.shiftTypes[idx].color = color;
-          state.config.shiftTypes[idx].turnCount = turnCountVal;
         }
       }
 
@@ -2421,6 +2481,227 @@ ${pendingBacklog}
       renderActiveTab();
       showToast("🗑️ Hábito removido!");
     };
+
+
+    window.openAddEventModal = function() {
+      // Pre-seleccionar o dia actual
+      const daySelect = document.getElementById("event-day");
+      if (daySelect) daySelect.value = DAY_KEYS[state.selectedDayIndex];
+      document.getElementById("add-event-modal").classList.remove("hidden");
+    };
+    window.closeAddEventModal = function() {
+      document.getElementById("add-event-modal").classList.add("hidden");
+    };
+
+    window.addEventAndReplan = async function() {
+      const title = document.getElementById("event-title").value.trim();
+      const dayKey = document.getElementById("event-day").value;
+      const time = document.getElementById("event-time").value;
+      const dur = parseInt(document.getElementById("event-dur").value || "120", 10);
+
+      if (!title) { showToast("⚠️ Dá um nome ao evento!"); return; }
+
+      // Adicionar o evento ao plano do dia como bloco fixo
+      if (!state.weekState.plan) state.weekState.plan = { days: {} };
+      DAY_KEYS.forEach(k => { if (!state.weekState.plan.days[k]) state.weekState.plan.days[k] = { blocks: [] }; });
+      
+      // Adicionar bloco de evento
+      state.weekState.plan.days[dayKey].blocks.push({ title, time, duration: dur, type: "rest", isEvent: true });
+      state.weekState.plan.days[dayKey].blocks.sort((a,b) => a.time.localeCompare(b.time));
+      
+      closeAddEventModal();
+      await saveCloudWeekState();
+
+      // Re-planear semana com IA se houver chave
+      const apiKey = state.config.geminiKey?.trim();
+      if (!apiKey) {
+        showToast("✅ Evento adicionado! Insere a chave Gemini para re-planear automaticamente.");
+        renderActiveTab();
+        return;
+      }
+
+      $("ai-loader").classList.remove("hidden");
+      $("loader-text").innerText = "A re-planear a semana com o novo evento...";
+
+      // Construir contexto do estado actual
+      const checkedKeys = Object.keys(state.weekState.checked || {}).filter(k => state.weekState.checked[k]);
+      
+      const shiftInfo = DAY_KEYS.map((k, i) => {
+        const shId = state.weekState.shifts?.[k] || "F";
+        const sh = findShift(shId);
+        const endT = sh.end || calculateExitTime(sh.start, sh.hours || 0);
+        if (sh.hours === 0) return `${DAYS_PT[i]}: FOLGA`;
+        return `${DAYS_PT[i]}: Turno ${sh.name} ${sh.start}–${endT}, chega casa ${sh.home}`;
+      }).join("
+");
+
+      const eventsInfo = DAY_KEYS.map((k, i) => {
+        const dayBlocks = state.weekState.plan?.days?.[k]?.blocks || [];
+        const events = dayBlocks.filter(b => b.isEvent);
+        if (!events.length) return null;
+        return `${DAYS_PT[i]}: ${events.map(e => `${e.title} às ${e.time} (${e.duration}min)`).join(", ")}`;
+      }).filter(Boolean).join("
+") || "Nenhum";
+
+      const doneBlocks = DAY_KEYS.map((k, i) => {
+        const dayBlocks = state.weekState.plan?.days?.[k]?.blocks || [];
+        const done = dayBlocks.filter((_, idx) => state.weekState.checked?.[k+"_"+idx] || state.weekState.blockStatuses?.[k+"_"+idx]?.status === "done");
+        if (!done.length) return null;
+        return `${DAYS_PT[i]}: ${done.map(b => b.title).join(", ")}`;
+      }).filter(Boolean).join("
+") || "Nenhuma actividade concluída ainda";
+
+      const pendingBacklog = state.backlog.filter(b => b.status !== "done")
+        .map(b => `- [${b.priority}] ${b.title}`).join("
+") || "Vazio";
+
+      const flexList = state.config.flexTasks.map(f => `- ${f.name} (${f.freq}x/sem, ${f.dur}min, pref: ${f.pref})`).join("
+");
+
+      // Carregar padrões para re-planeamento
+      const replanPatterns = await loadPatterns();
+      let replanPatternsText = "";
+      if (Object.keys(replanPatterns).length > 0) {
+        const ri = Object.entries(replanPatterns)
+          .filter(([, p]) => p.total >= 2)
+          .map(([key, p]) => {
+            const [day, type] = key.split("_");
+            const pct = Math.round(p.done / p.total * 100);
+            if (pct < 40) return `- Evita ${type} em ${day} (cumprido só ${pct}%)`;
+            return null;
+          }).filter(Boolean).join("\n");
+        if (ri) replanPatternsText = `\nPADRÕES DO UTILIZADOR:\n${ri}`;
+      }
+
+      const systemPrompt = `És um assistente de re-planeamento semanal. Re-gera o plano para o resto da semana preservando EXACTAMENTE o que já foi feito e os eventos fixos.${replanPatternsText}
+
+REGRAS CRÍTICAS:
+- Não alteres nem removas actividades já marcadas como concluídas
+- Mantém os eventos fixos (isEvent: true) exactamente onde estão
+- Distribui o que ainda não foi feito pelos dias restantes com tempo disponível
+- Sono: mínimo 7h, máximo 9h. Após turno nocturno (T/IT/MIT), deitar após 01h, acordar após 07h
+- Turnos MI/IT: sem almoço/jantar de 60min, apenas pausa de 15min
+- Backlog: distribui 1-2 itens nos dias mais livres
+- Se uma semana estiver muito carregada, diz numa linha no campo "weekRisk": "Semana em risco: X não coube"
+- Devolve APENAS JSON válido
+
+FORMATO:
+{"weekRisk": null, "days": {"mon": {"blocks": [{"title": "...", "time": "HH:MM", "duration": 30, "type": "work|rest|activity|meal|gaming|sleep", "isEvent": false}]}, ...todos os 7 dias...}}`;
+
+      const userMsg = `TURNOS:
+${shiftInfo}
+
+EVENTOS FIXOS (não mover):
+${eventsInfo}
+
+JÁ CONCLUÍDO (não alterar):
+${doneBlocks}
+
+BACKLOG PENDENTE:
+${pendingBacklog}
+
+HÁBITOS FLEXÍVEIS:
+${flexList}`;
+
+      try {
+        const MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-3.5-flash"];
+        let response = null;
+        for (const model of MODELS) {
+          $("loader-text").innerText = `A re-planear com ${model}...`;
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          try {
+            response = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: systemPrompt + "\n\n" + userMsg }] }],
+                generationConfig: { responseMimeType: "application/json" }
+              })
+            });
+            if (response.ok) break;
+            response = null;
+          } catch(e) { response = null; }
+        }
+
+        if (!response?.ok) throw new Error("Todos os modelos falharam");
+
+        const resData = await response.json();
+        let txt = resData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        txt = txt.replace(/```json|```/g, "").trim();
+        const parsed = JSON.parse(txt);
+
+        // Preservar blocos já feitos e eventos
+        DAY_KEYS.forEach(k => {
+          const oldBlocks = state.weekState.plan?.days?.[k]?.blocks || [];
+          const newBlocks = parsed.days?.[k]?.blocks || [];
+          
+          // Manter eventos fixos e blocos feitos
+          const doneOld = oldBlocks.filter((b, idx) => 
+            b.isEvent || state.weekState.checked?.[k+"_"+idx] || state.weekState.blockStatuses?.[k+"_"+idx]?.status === "done"
+          );
+          
+          // Mesclar: feitos/eventos + novos blocos não sobrepostos
+          const merged = [...doneOld, ...newBlocks.filter(nb => !doneOld.some(d => d.time === nb.time))];
+          merged.sort((a,b) => a.time.localeCompare(b.time));
+          
+          if (!state.weekState.plan.days[k]) state.weekState.plan.days[k] = {};
+          state.weekState.plan.days[k].blocks = merged;
+        });
+
+        // Mostrar aviso se semana em risco
+        if (parsed.weekRisk) {
+          showToast("⚠️ " + parsed.weekRisk);
+        } else {
+          showToast("✨ Semana re-planeada com sucesso!");
+        }
+
+        await saveCloudWeekState();
+      } catch(err) {
+        console.error(err);
+        showToast("❌ Erro ao re-planear. Evento foi guardado na mesma.");
+      } finally {
+        $("ai-loader").classList.add("hidden");
+        renderActiveTab();
+      }
+    };
+
+
+    // ── APRENDIZAGEM ──────────────────────────────────────────────────────
+    async function recordPattern(dayKey, blockType, blockTitle, status) {
+      // Guardar padrão: dia da semana + tipo de bloco + resultado
+      if (state.isOffline || !db) return;
+      try {
+        const patternKey = `${dayKey}_${blockType}`;
+        const patternRef = doc(db, `users/${UID}/patterns/${patternKey}`);
+        const snap = await getDoc(patternRef);
+        const current = snap.exists() ? snap.data() : { done: 0, skipped: 0, total: 0, examples: [] };
+        
+        const updated = {
+          done: current.done + (status === "done" ? 1 : 0),
+          skipped: current.skipped + (status === "skipped" ? 1 : 0),
+          total: current.total + 1,
+          // Guardar últimos 5 exemplos para contexto
+          examples: [...(current.examples || []).slice(-4), {
+            title: blockTitle,
+            status,
+            date: todayKey(),
+            energy: state.energyLogs[todayKey()] || "normal"
+          }]
+        };
+        await setDoc(patternRef, updated);
+      } catch(e) { console.warn("Pattern record failed:", e); }
+    }
+
+    // Carregar padrões para passar à IA
+    async function loadPatterns() {
+      if (state.isOffline || !db) return {};
+      try {
+        const snap = await getDocs(collection(db, `users/${UID}/patterns`));
+        const patterns = {};
+        snap.forEach(d => { patterns[d.id] = d.data(); });
+        return patterns;
+      } catch(e) { return {}; }
+    }
 
     // Boot execution
     if (document.readyState === "complete" || document.readyState === "interactive") {
