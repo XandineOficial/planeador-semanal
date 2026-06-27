@@ -604,7 +604,33 @@
     }
 
     // Initialize application and connections
-    async function initApp() {
+    // ── GEMINI CALL CENTRALIZADA ──────────────────────────────────────────
+    async function callGemini(apiKey, systemPrompt, userMsg, loaderEl) {
+      const MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-3.5-flash"];
+      for (const model of MODELS) {
+        if (loaderEl) loaderEl.innerText = `A usar ${model}...`;
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: systemPrompt + "\n\n" + userMsg }] }],
+              generationConfig: { responseMimeType: "application/json" }
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            let txt = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            txt = txt.replace(/```json|```/g, "").trim();
+            return JSON.parse(txt);
+          }
+        } catch(e) { continue; }
+      }
+      throw new Error("Todos os modelos Gemini falharam. Tenta mais tarde.");
+    }
+
+        async function initApp() {
       // Load fallback local config immediately and sanitize
       state.config = sanitizeConfig(loadLocal("alex_config_v3", state.config));
       state.backlog = loadLocal("alex_backlog_v3", []);
@@ -665,11 +691,9 @@
           renderActiveTab();
           updateBacklogNavBadge();
         }, (err) => {
-          console.warn("Firestore sync backlog permission denied or unavailable:", err);
         });
 
       } catch (err) {
-        console.warn("Firestore offline fallback active:", err);
         state.isOffline = true;
         const connBadge = $("connection-badge");
         if (connBadge) {
@@ -692,7 +716,6 @@
           saveLocal(`alex_week_v3_${weekStr}`, state.weekState);
         }
       } catch (e) {
-        console.warn(e);
       }
     }
 
@@ -703,7 +726,6 @@
       try {
         await setDoc(doc(db, `users/${UID}/weeks/${state.weekStr}`), state.weekState);
       } catch (e) {
-        console.warn(e);
       }
     }
 
@@ -714,7 +736,6 @@
       try {
         await setDoc(doc(db, `users/${UID}/config/main`), state.config);
       } catch (e) {
-        console.warn("Firestore error writing config:", e);
       }
     }
 
@@ -1298,10 +1319,6 @@
     // TAB 2: SEMANA (Weekly Navigation & Shift Management & Gemini Generator)
     // ────────────────────────────────────────────────────────────────────────
     function renderSemanaTab(container) {
-      const currentMonday = new Date(state.weekStr);
-      const sundayDate = new Date(currentMonday);
-      sundayDate.setDate(sundayDate.getDate() + 6);
-      
       const days = getWeekDays(state.weekStr);
       const now = new Date();
 
@@ -1651,7 +1668,6 @@
             icsLines.push(`DESCRIPTION:Horário de Trabalho: ${shift.start} às ${endT}. Chegada a casa: ${shift.home}. Adicionado via planeador Alex.`);
             icsLines.push("END:VEVENT");
           } catch (e) {
-            console.warn("Error exporting shift event:", e);
           }
         }
 
@@ -1676,7 +1692,6 @@
               icsLines.push(`DESCRIPTION:Atividade de ${block.duration}min do plano semanal IA de categoria ${block.type}.`);
               icsLines.push("END:VEVENT");
             } catch (e) {
-              console.warn("Error exporting block event:", e);
             }
           });
         }
@@ -1818,50 +1833,7 @@ ${pendingBacklog}${patternsText}
       `;
 
       try {
-        // Tentar modelos por ordem de preferência
-        const MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-3.5-flash"];
-        let response = null;
-        let lastErr = "";
-        
-        for (const model of MODELS) {
-          try {
-            $("loader-text").innerText = `A usar ${model}...`;
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-            response = await fetch(url, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: [{
-                  parts: [{ text: systemRulesAndConstraints + "\n\n" + promptUser }]
-                }],
-                generationConfig: {
-                  responseMimeType: "application/json"
-                }
-              })
-            });
-            if (response.ok) break;
-            lastErr = `${model}: ${response.status}`;
-            response = null;
-          } catch(e) {
-            lastErr = e.message;
-            response = null;
-          }
-        }
-        
-        if (!response || !response.ok) {
-          throw new Error(`Todos os modelos falharam. Último erro: ${lastErr}`);
-        }
-
-        const resData = await response.json();
-        const jsonText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!jsonText) throw new Error("A API Gemini não retornou texto válido.");
-
-        // Clean potentially remaining markdown wrap
-        let cleanedJson = jsonText.trim();
-        if (cleanedJson.startsWith("```json")) cleanedJson = cleanedJson.substring(7);
-        if (cleanedJson.endsWith("```")) cleanedJson = cleanedJson.substring(0, cleanedJson.length - 3);
-
-        const parsedPlan = JSON.parse(cleanedJson.trim());
+        const parsedPlan = await callGemini(apiKey, systemRulesAndConstraints, promptUser, $("loader-text"));
         
         state.weekState.plan = parsedPlan;
         state.weekState.checked = {};
@@ -2524,39 +2496,32 @@ ${pendingBacklog}${patternsText}
       $("loader-text").innerText = "A re-planear a semana com o novo evento...";
 
       // Construir contexto do estado actual
-      const checkedKeys = Object.keys(state.weekState.checked || {}).filter(k => state.weekState.checked[k]);
-      
       const shiftInfo = DAY_KEYS.map((k, i) => {
         const shId = state.weekState.shifts?.[k] || "F";
         const sh = findShift(shId);
         const endT = sh.end || calculateExitTime(sh.start, sh.hours || 0);
         if (sh.hours === 0) return `${DAYS_PT[i]}: FOLGA`;
         return `${DAYS_PT[i]}: Turno ${sh.name} ${sh.start}–${endT}, chega casa ${sh.home}`;
-      }).join("
-");
+      }).join("\n");
 
       const eventsInfo = DAY_KEYS.map((k, i) => {
         const dayBlocks = state.weekState.plan?.days?.[k]?.blocks || [];
         const events = dayBlocks.filter(b => b.isEvent);
         if (!events.length) return null;
         return `${DAYS_PT[i]}: ${events.map(e => `${e.title} às ${e.time} (${e.duration}min)`).join(", ")}`;
-      }).filter(Boolean).join("
-") || "Nenhum";
+      }).filter(Boolean).join("\n") || "Nenhum";
 
       const doneBlocks = DAY_KEYS.map((k, i) => {
         const dayBlocks = state.weekState.plan?.days?.[k]?.blocks || [];
         const done = dayBlocks.filter((_, idx) => state.weekState.checked?.[k+"_"+idx] || state.weekState.blockStatuses?.[k+"_"+idx]?.status === "done");
         if (!done.length) return null;
         return `${DAYS_PT[i]}: ${done.map(b => b.title).join(", ")}`;
-      }).filter(Boolean).join("
-") || "Nenhuma actividade concluída ainda";
+      }).filter(Boolean).join("\n") || "Nenhuma actividade concluída ainda";
 
       const pendingBacklog = state.backlog.filter(b => b.status !== "done")
-        .map(b => `- [${b.priority}] ${b.title}`).join("
-") || "Vazio";
+        .map(b => `- [${b.priority}] ${b.title}`).join("\n") || "Vazio";
 
-      const flexList = state.config.flexTasks.map(f => `- ${f.name} (${f.freq}x/sem, ${f.dur}min, pref: ${f.pref})`).join("
-");
+      const flexList = state.config.flexTasks.map(f => `- ${f.name} (${f.freq}x/sem, ${f.dur}min, pref: ${f.pref})`).join("\n");
 
       // Carregar padrões para re-planeamento
       const replanPatterns = await loadPatterns();
@@ -2604,31 +2569,7 @@ HÁBITOS FLEXÍVEIS:
 ${flexList}`;
 
       try {
-        const MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-3.5-flash"];
-        let response = null;
-        for (const model of MODELS) {
-          $("loader-text").innerText = `A re-planear com ${model}...`;
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-          try {
-            response = await fetch(url, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: systemPrompt + "\n\n" + userMsg }] }],
-                generationConfig: { responseMimeType: "application/json" }
-              })
-            });
-            if (response.ok) break;
-            response = null;
-          } catch(e) { response = null; }
-        }
-
-        if (!response?.ok) throw new Error("Todos os modelos falharam");
-
-        const resData = await response.json();
-        let txt = resData.candidates?.[0]?.content?.parts?.[0]?.text || "";
-        txt = txt.replace(/```json|```/g, "").trim();
-        const parsed = JSON.parse(txt);
+        const parsed = await callGemini(apiKey, systemPrompt, userMsg, $("loader-text"));
 
         // Preservar blocos já feitos e eventos
         DAY_KEYS.forEach(k => {
