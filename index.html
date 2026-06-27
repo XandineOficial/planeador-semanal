@@ -604,7 +604,22 @@
     }
 
     // Initialize application and connections
-    // ── GEMINI CALL CENTRALIZADA ──────────────────────────────────────────
+    // Helper: procura turno por ID ou nome (compatibilidade com IDs antigos do Firebase)
+    function findShift(idOrName) {
+      if (!idOrName || idOrName === "F") {
+        return state.config.shiftTypes.find(s => s.id === "F") || { id: "F", name: "Folga", color: "#555452", notes: "Livre", hours: 0, start: "00:00", home: "00:00", turnCount: 0 };
+      }
+      const found = state.config.shiftTypes.find(s => s.id === idOrName)
+          || state.config.shiftTypes.find(s => s.name === idOrName);
+      if (!found) return { id: idOrName, name: idOrName, color: "#555452", notes: idOrName, hours: 0, start: "00:00", home: "00:00", turnCount: 0 };
+      return {
+        ...found,
+        start: found.start || found.startTime || "00:00",
+        home: found.home || found.homeTime || "00:00",
+      };
+    }
+
+        // ── GEMINI CALL CENTRALIZADA ──────────────────────────────────────────
     async function callGemini(apiKey, systemPrompt, userMsg, loaderEl) {
       const MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-3.5-flash"];
       for (const model of MODELS) {
@@ -851,13 +866,16 @@
     // ────────────────────────────────────────────────────────────────────────
     function renderHojeTab(container) {
       const days = getWeekDays(state.weekStr);
+      // Guard: selectedDayIndex válido
+      if (state.selectedDayIndex < 0 || state.selectedDayIndex > 6) state.selectedDayIndex = 0;
       const currentDay = days[state.selectedDayIndex];
+      if (!currentDay) { container.innerHTML = "<p style='color:white;padding:20px'>A carregar...</p>"; return; }
       const selectedDayStr = dKey(currentDay);
       const isToday = selectedDayStr === todayKey();
       
       const dayKey = DAY_KEYS[state.selectedDayIndex];
       const activeShiftId = state.weekState.shifts?.[dayKey] || "F";
-      const shiftObj = state.config.shiftTypes.find(s => s.id === activeShiftId) || { name: "Folga", color: "#555452", notes: "Livre" };
+      const shiftObj = findShift(activeShiftId);
 
       const dayPlan = state.weekState.plan?.days?.[dayKey] || { blocks: [] };
       const blocks = dayPlan.blocks || [];
